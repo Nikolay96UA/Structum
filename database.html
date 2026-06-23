@@ -40,7 +40,9 @@
     const list = document.getElementById('usersList');
     
     // ТЕПЕРЬ СЛЕДИТЕ ЗА ПУТЕМ: мы явно пишем адрес бэкенда localhost:3000
-    const API_URL = 'http://localhost:3000/api/users';
+    // const API_URL = 'http://localhost:3000/api/users';
+// НАЙДИТЕ ЭТУ СТРОКУ ВНУТРИ <script> И ЗАМЕНИТЕ НА ЭТУ:
+const API_URL = 'https://onrender.com/api/users';
 
     // Функция для загрузки списка пользователей
     async function loadUsers() {
