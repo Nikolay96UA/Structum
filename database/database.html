@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <header>
+        <a href="index.html"><p>STRUCTUM</p><p>облік персоналу</p></a>
+    </header>
+<body>
+    <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Локальная БД и HTML</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; }
+        form { margin-bottom: 20px; }
+        input { margin: 5px; padding: 5px; }
+        button { padding: 5px 10px; cursor: pointer; }
+        ul { list-style-type: square; }
+    </style>
+</head>
+<body>
+
+    <h2>Добавить пользователя в JSON БД</h2>
+    <form id="userForm">
+        <input type="text" id="userName" placeholder="Имя" required><br>
+        <input type="number" id="userAge" placeholder="Возраст" required><br>
+        <button type="submit">Сохранить в базу</button>
+    </form>
+
+    <h2>Список пользователей из файла:</h2>
+    <ul id="usersList"></ul>
+
+  <script>
+    const form = document.getElementById('userForm');
+    const list = document.getElementById('usersList');
+    
+    // ТЕПЕРЬ СЛЕДИТЕ ЗА ПУТЕМ: мы явно пишем адрес бэкенда localhost:3000
+    const API_URL = 'http://localhost:3000/api/users';
+
+    // Функция для загрузки списка пользователей
+    async function loadUsers() {
+        list.innerHTML = 'Загрузка...';
+        try {
+            const response = await fetch(API_URL);
+            const users = await response.json();
+            
+            list.innerHTML = ''; 
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = `${user.name} (${user.age} лет) — ID: ${user.id}`;
+                list.appendChild(li);
+            });
+        } catch (error) {
+            list.innerHTML = 'Ошибка подключения к серверу Node.js';
+            console.error(error);
+        }
+    }
+
+    // Обработчик отправки формы
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault(); 
+
+        const name = document.getElementById('userName').value;
+        const age = document.getElementById('userAge').value;
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, age })
+            });
+
+            if (response.ok) {
+                form.reset(); 
+                loadUsers();  
+            }
+        } catch (error) {
+            alert('Не удалось сохранить данные. Проверьте, запущен ли Node.js!');
+        }
+    });
+
+    // Загружаем пользователей сразу при открытии страницы
+    loadUsers();
+</script>
+
+</body>
+</html>
+
+</body>
+
+    <!-- <script src="./js/database.js"></script> -->
+</body>
+</html>

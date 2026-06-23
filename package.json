@@ -1,5 +1,10 @@
 {
+  "name": "json-database-project",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "database.js",
   "dependencies": {
-    "qrious": "^4.0.2"
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
   }
 }
