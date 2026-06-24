@@ -410,15 +410,17 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             row.getCell(colDodano).value = user.bonuses || '';
             row.getCell(colUtrimano).value = user.penalties || ''; 
 
-            const dnivAddress = sheet.getCell(rowIndex, colDniv).address;
-            const tarifAddress = sheet.getCell(rowIndex, colTarif1).address;
-            const dodanoAddress = sheet.getCell(rowIndex, colDodano).address;
-            const utrimanoAddress = sheet.getCell(rowIndex, colUtrimano).address;
+                        // Динамически получаем точные буквы колонок прямо из exceljs
+            const dnivLetter = sheet.getCell(rowIndex, colDniv).address.replace(/[0-9]/g, ''); // Буква колонки "Днів" (AI)
+            const tarifLetter = sheet.getCell(rowIndex, colTarif1).address.replace(/[0-9]/g, ''); // Буква колонки "Тариф 1" (AK)
+            const dodanoLetter = sheet.getCell(rowIndex, colDodano).address.replace(/[0-9]/g, ''); // Буква колонки "Додано" (AM)
+            const utrimanoLetter = sheet.getCell(rowIndex, colUtrimano).address.replace(/[0-9]/g, ''); // Буква колонки "Утримано" (AN)
 
-            // Формула суммы
+            // Прописываем чистую формулу без привязки к жестким индексам: =AI4*AK4+AM4-AN4
             row.getCell(colSuma).value = {
-                formula: `=${dnivAddress}*${tarifAddress}+${dodanoAddress}-${utrimanoAddress}`
+                formula: `=${dnivLetter}${rowIndex}*${tarifLetter}${rowIndex}+${dodanoLetter}${rowIndex}-${utrimanoLetter}${rowIndex}`
             };
+
 
             row.getCell(colPrim).value = user.notes || '';
 
