@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import multer from 'multer'; // Добавили импорт для работы с файлами
+import * as XLSX from 'xlsx'; // Добавили импорт для чтения Excel
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -8,7 +10,11 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// --- ВСТАВИЛИ ТВОЮ СТРОКУ ПОДКЛЮЧЕНИЯ ---
+// Настройка multer для чтения файлов прямо из памяти (без сохранения на жесткий диск)
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+// --- ПОДКЛЮЧЕНИЕ К MONGODB ---
 const MONGO_URI = 'mongodb+srv://themaxplayn_db_user:6Qe2X8KRlCOISdcv@cluster0.xf3circ.mongodb.net/myDatabase?appName=Cluster0';
 
 mongoose.connect(MONGO_URI)
@@ -16,44 +22,17 @@ mongoose.connect(MONGO_URI)
   .catch(err => console.error('❌ Ошибка подключения к базе:', err));
 
 // --- СХЕМА ПОЛЬЗОВАТЕЛЯ ---
-// const userSchema = new mongoose.Schema({
-//     name: String,
-//     job: String,
-//     id: Number,
-//     createdAt: { type: Date, default: Date.now }
-// });
-
-// const User = mongoose.model('User', userSchema);
-// 1. ИСПРАВЛЯЕМ СХЕМУ (заменяем age на job)
 const userSchema = new mongoose.Schema({
     name: String,
-    job: String, // Теперь здесь строка вместо числа
+    job: String,
     createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', userSchema);
 
-// 2. ИСПРАВЛЯЕМ МАРШРУТ ДОБАВЛЕНИЯ
-app.post('/api/users', async (req, res) => {
-    try {
-        // Убедитесь, что сервер берет из req.body именно job!
-        const newUser = new User({ 
-            name: req.body.name, 
-            job: req.body.job 
-        });
-        
-        await newUser.save(); 
-        res.status(201).json({ success: true, user: newUser });
-    } catch (error) {
-        // Если схема не совпадает, сервер как раз выкидывает ошибку 400
-        res.status(400).json({ message: 'Ошибка при сохранении' }); 
-    }
-});
+// --- МАРШРУТЫ API ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ---
 
-
-// --- МАРШРУТЫ API ---
-
-// 1. Получить всех из базы
+// 1. Получить всех пользователей из базы
 app.get('/api/users', async (req, res) => {
     try {
         const users = await User.find();
@@ -63,54 +42,63 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
+// 2. Добавить нового пользователя в базу
 app.post('/api/users', async (req, res) => {
     try {
-        // Убедитесь, что сервер берет из req.body именно job!
         const newUser = new User({ 
             name: req.body.name, 
             job: req.body.job 
         });
-        
         await newUser.save(); 
         res.status(201).json({ success: true, user: newUser });
     } catch (error) {
-        // Если схема не совпадает, сервер как раз выкидывает ошибку 400
         res.status(400).json({ message: 'Ошибка при сохранении' }); 
     }
-});
-
-// 2. Добавить нового в базу
-// app.post('/api/users', async (req, res) => {
-//     try {
-//         const newUser = new User({
-//             name: req.body.name,
-//             job: req.body.job,
-//             id: req.body.id
-//         });
-//         await newUser.save(); 
-//         res.status(201).json({ success: true, user: newUser });
-//     } catch (error) {
-//         res.status(400).json({ message: 'Ошибка при сохранении' });
-//     }
-// });
-
-app.listen(PORT, () => {
-    console.log(`📡 Бэкенд-сервер запущен на порту ${PORT}`);
 });
 
 // 3. Удалить пользователя по его ID из MongoDB
 app.delete('/api/users/:id', async (req, res) => {
     try {
         const userId = req.params.id;
-        // Находим в MongoDB документ по ID и удаляем его
         const deletedUser = await User.findByIdAndDelete(userId);
         
         if (!deletedUser) {
             return res.status(404).json({ message: 'Пользователь не найден' });
         }
-        
         res.json({ success: true, message: 'Пользователь успешно удален' });
     } catch (error) {
         res.status(500).json({ message: 'Ошибка при удалении' });
     }
+});
+
+
+// --- МАРШРУТ API ДЛЯ ТАБЕЛЯ EXCEL ---
+
+// 4. Загрузка файла Excel, парсинг и отправка JSON обратно
+app.post('/api/tavel/upload', upload.single('excelFile'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Файл не загружен' });
+        }
+
+        // Читаем файл Excel из буфера памяти
+        const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0]; // Берем самый первый лист таблицы
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Превращаем строки Excel в удобный массив объектов
+        const rawData = XLSX.utils.sheet_to_json(worksheet);
+
+        // Отправляем готовые данные обратно на фронтенд
+        res.json({ success: true, data: rawData });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Ошибка при обработке Excel' });
+    }
+});
+
+
+// --- ЗАПУСК СЕРВЕРА (Всегда пишется в самом конце файла!) ---
+app.listen(PORT, () => {
+    console.log(`📡 Бэкенд-сервер запущен на порту ${PORT}`);
 });
