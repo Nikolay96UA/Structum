@@ -152,52 +152,224 @@ app.post('/api/attendance/scan', async (req, res) => {
 });
 
 // --- МАРШРУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ В EXCEL ---
+// app.get('/api/attendance/download-excel', async (req, res) => {
+//     try {
+//         // Получаем месяц и год из строки запроса (например, ?year=2026&month=6) или берем текущие
+//         const year = parseInt(req.query.year) || new Date().getFullYear();
+//         const month = parseInt(req.query.month) || (new Date().getMonth() + 1); 
+//         const daysInMonth = new Date(year, month, 0).getDate(); 
+
+//         const workbook = new ExcelJS.Workbook();
+//         const sheet = workbook.addWorksheet(`AT-${month}`);
+//         sheet.views = [{ showGridLines: true }];
+
+//         // 1. Создаем шапку таблицы
+//         sheet.mergeCells('A1:C1');
+//         sheet.getCell('A1').value = `Табель робочого часу - Місяць ${month}.${year}`;
+//         sheet.getCell('A1').font = { name: 'Times New Roman', size: 12, bold: true };
+
+//         sheet.getRow(3).values = [
+//             '№', 'ПІБ', 'Посада', 
+//             ...Array.from({ length: daysInMonth }, (_, i) => i + 1), 
+//             'Борг', 'Днів', 'Днів 2', 'Тариф 1', 'Тариф 2', 'Додано', 'Утримано', 'Сума', 'Примітки'
+//         ];
+
+//         // 2. Стилизуем ячейки с датами (желтый цвет как на скриншоте)
+//         for (let col = 4; col <= 3 + daysInMonth; col++) {
+//             const cell = sheet.getCell(3, col);
+//             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC000' } };
+//             cell.font = { bold: true };
+//             cell.alignment = { horizontal: 'center' };
+//         }
+
+//         // 3. Получаем всех пользователей и все посещения
+//         const users = await User.find().sort({ name: 1 });
+//         const visits = await Visit.find();
+
+//               // 4. Заполняем строки данными сотрудников
+//         users.forEach((user, index) => {
+//             const rowIndex = 4 + index; 
+//             const row = sheet.getRow(rowIndex);
+
+//             row.getCell(1).value = index + 1;
+//             row.getCell(2).value = user.name || 'Без имени';
+//             row.getCell(3).value = user.job || 'Рабочий';
+
+//             let workedDaysCount = 0;
+            
+//             // Проверяем явки на каждый день месяца
+//             for (let day = 1; day <= daysInMonth; day++) {
+//                 const colIndex = 3 + day;
+//                 const currentDayStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+//                 const hasScan = visits.some(visit => 
+//                     visit.userId && visit.userId.toString() === user._id.toString() && 
+//                     visit.dateString === currentDayStr
+//                 );
+
+//                 if (hasScan) {
+//                     row.getCell(colIndex).value = 8; // Ставим 8, если был скан
+//                     workedDaysCount++;
+//                 } else {
+//                     // 🌟 Теперь здесь может быть пусто '', или ты можешь руками вписать 'В' в скачанном файле
+//                     row.getCell(colIndex).value = ''; 
+//                 }
+//             }
+//             // Индексы финальных колонок после дат
+//             const colBorg = 4 + daysInMonth;
+//             const colDniv = colBorg + 1; // 🌟 Колонка "Днів", где число явок уже посчитано сервером
+//             const colDniv2 = colBorg + 2;
+//             const colTarif1 = colBorg + 3; // 🌟 Колонка "Тариф 1"
+//             const colTarif2 = colBorg + 4;
+//             const colDodano = colBorg + 5; // 🌟 Колонка "Додано"
+//             const colUtrimano = colBorg + 6; // 🌟 Колонка "Утримано"
+//             const colSuma = colBorg + 7;   // 🌟 Колонка "Сума"
+//             const colPrim = colBorg + 8;
+
+//             row.getCell(colBorg).value = user.debt || 0;
+//             row.getCell(colDniv).value = workedDaysCount; // Сюда бэкенд записывает чистое число (например, 15)
+//             row.getCell(colDniv2).value = 0; 
+//             row.getCell(colTarif1).value = user.tariff || 0;
+//             row.getCell(colTarif2).value = 0; 
+//             row.getCell(colDodano).value = user.bonuses || 0;
+//             row.getCell(colUtrimano).value = user.penalties || 0; 
+
+//             // Получаем точные адреса ячеек для текущей строки (например, AJ4, AL4 и т.д.)
+//             const dnivAddress = sheet.getCell(rowIndex, colDniv).address;
+//             const tarifAddress = sheet.getCell(rowIndex, colTarif1).address;
+//             const dodanoAddress = sheet.getCell(rowIndex, colDodano).address;
+//             const utrimanoAddress = sheet.getCell(rowIndex, colUtrimano).address;
+
+//             // 🌟 ЖЕЛЕЗНАЯ ФОРМУЛА: Число Дней * Тариф + Добавлено - Удержано
+//             // Больше никакой зависимости от букв "В" в календаре!
+//             row.getCell(colSuma).value = {
+//                 formula: `=${dnivAddress}*${tarifAddress}+${dodanoAddress}-${utrimanoAddress}`
+//             };
+
+//             row.getCell(colPrim).value = user.notes || '';
+//             row.font = { name: 'Times New Roman', size: 10 };
+//         });
+
+
+//         sheet.getColumn(2).width = 35; // Автоширина для ФИО
+//         sheet.getColumn(3).width = 15; // Автоширина для должностей
+
+//         // 5. Настройка заголовков для скачивания файла браузером
+//         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+//         res.setHeader('Content-Disposition', `attachment; filename=Tabel_${month}_${year}.xlsx`);
+
+//         await workbook.xlsx.write(res);
+//         res.end();
+
+//     } catch (error) {
+//         console.error('Ошибка генерации Excel:', error);
+//         res.status(500).send('Ошибка сервера при создании Excel');
+//     }
+// });
 app.get('/api/attendance/download-excel', async (req, res) => {
     try {
-        // Получаем месяц и год из строки запроса (например, ?year=2026&month=6) или берем текущие
         const year = parseInt(req.query.year) || new Date().getFullYear();
         const month = parseInt(req.query.month) || (new Date().getMonth() + 1); 
         const daysInMonth = new Date(year, month, 0).getDate(); 
 
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet(`AT-${month}`);
+        
+        // Включаем отображение стандартной сетки Excel
         sheet.views = [{ showGridLines: true }];
 
-        // 1. Создаем шапку таблицы
-        sheet.mergeCells('A1:C1');
-        sheet.getCell('A1').value = `Табель робочого часу - Місяць ${month}.${year}`;
-        sheet.getCell('A1').font = { name: 'Times New Roman', size: 12, bold: true };
+        // --- НАСТРОЙКА ШИРИНЫ КОЛОНОК ---
+        sheet.getColumn(1).width = 4;   // №
+        sheet.getColumn(2).width = 32;  // ПІБ
+        sheet.getColumn(3).width = 14;  // Посада
+        for (let d = 1; d <= daysInMonth; d++) {
+            sheet.getColumn(3 + d).width = 3.2; // Узкие колонки для дат (1-31)
+        }
+        const startFinanceCol = 4 + daysInMonth;
+        sheet.getColumn(startFinanceCol).width = 7;     // Борг
+        sheet.getColumn(startFinanceCol + 1).width = 6; // Днів
+        sheet.getColumn(startFinanceCol + 2).width = 6; // Днів 2
+        sheet.getColumn(startFinanceCol + 3).width = 8; // Тариф 1
+        sheet.getColumn(startFinanceCol + 4).width = 8; // Тариф 2
+        sheet.getColumn(startFinanceCol + 5).width = 8; // Додано
+        sheet.getColumn(startFinanceCol + 6).width = 8; // Утримано
+        sheet.getColumn(startFinanceCol + 7).width = 9; // Сума
+        sheet.getColumn(startFinanceCol + 8).width = 15;// Примітки
 
-        sheet.getRow(3).values = [
-            '№', 'ПІБ', 'Посада', 
-            ...Array.from({ length: daysInMonth }, (_, i) => i + 1), 
-            'Борг', 'Днів', 'Днів 2', 'Тариф 1', 'Тариф 2', 'Додано', 'Утримано', 'Сума', 'Примітки'
-        ];
+        // --- СТИЛИ ДЛЯ ГРАНИЦ (Тонкие линии вокруг ячеек) ---
+        const thinBorder = {
+            top: { style: 'thin', color: { argb: 'BFBFBF' } },
+            left: { style: 'thin', color: { argb: 'BFBFBF' } },
+            bottom: { style: 'thin', color: { argb: 'BFBFBF' } },
+            right: { style: 'thin', color: { argb: 'BFBFBF' } }
+        };
 
-        // 2. Стилизуем ячейки с датами (желтый цвет как на скриншоте)
-        for (let col = 4; col <= 3 + daysInMonth; col++) {
-            const cell = sheet.getCell(3, col);
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC000' } };
-            cell.font = { bold: true };
-            cell.alignment = { horizontal: 'center' };
+        // --- СТРОКА 1: Название месяца ---
+        sheet.mergeCells(`D1:${sheet.getCell(1, 3 + daysInMonth).address}`);
+        const monthCell = sheet.getCell('D1');
+        monthCell.value = `Червень ${year}   (AT-2)`;
+        monthCell.font = { name: 'Times New Roman', size: 10, bold: true, color: { argb: 'FF0000' } }; // Красный текст
+        monthCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+        // --- СТРОКА 2: Верхняя зеленая полоса ---
+        const row2 = sheet.getRow(2);
+        row2.height = 14;
+        sheet.mergeCells(`A2:${sheet.getCell(2, 3 + daysInMonth).address}`);
+        sheet.getCell('A2').value = "Загальнобудівельні роботи";
+        sheet.getCell('A2').font = { name: 'Times New Roman', size: 10, bold: true };
+        sheet.getCell('A2').alignment = { horizontal: 'center', vertical: 'middle' };
+        for (let col = 1; col <= startFinanceCol + 8; col++) {
+            sheet.getCell(2, col).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'E2EFDA' } }; // Светло-зеленый
+            sheet.getCell(2, col).border = thinBorder;
         }
 
-        // 3. Получаем всех пользователей и все посещения
+        // --- СТРОКА 3: Шапка колонок ---
+        const row3 = sheet.getRow(3);
+        row3.height = 20;
+        row3.values = [
+            '№', 'ПІБ', 'Посада', 
+            ...Array.from({ length: daysInMonth }, (_, i) => i + 1), 
+            'Борг', 'Днів', 'Днів 2', 'Тариф1', 'Тариф 2', 'Додано', 'Утримано', 'Сума', 'Примітки'
+        ];
+
+        // Стилизация ячеек строки 3
+        for (let col = 1; col <= startFinanceCol + 8; col++) {
+            const cell = sheet.getCell(3, col);
+            cell.font = { name: 'Times New Roman', size: 9, bold: true };
+            cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            cell.border = thinBorder;
+
+            // Красим в зависимости от колонки как на фото
+            if (col >= 4 && col <= 3 + daysInMonth) {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC000' } }; // Ярко-желтый для дат
+            } else if (col === startFinanceCol) {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2CC' } }; // Светло-желтый Борг
+            } else if (col === startFinanceCol + 1 || col === startFinanceCol + 2) {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'DDEBF7' } }; // Голубой Днів
+            } else if (col === startFinanceCol + 5) {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'E2EFDA' } }; // Зеленый Додано
+            } else if (col === startFinanceCol + 6) {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FCE4D6' } }; // Красный Утримано
+            } else {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F2F2F2' } }; // Серый для остальных
+            }
+        }
+
+        // --- НАПОЛНЕНИЕ ДАННЫМИ ИЗ БАЗЫ ---
         const users = await User.find().sort({ name: 1 });
         const visits = await Visit.find();
 
-              // 4. Заполняем строки данными сотрудников
         users.forEach((user, index) => {
             const rowIndex = 4 + index; 
             const row = sheet.getRow(rowIndex);
+            row.height = 18; // Комфортная высота строки
 
             row.getCell(1).value = index + 1;
-            row.getCell(2).value = user.name || 'Без имени';
-            row.getCell(3).value = user.job || 'Рабочий';
+            row.getCell(2).value = user.name || '';
+            row.getCell(3).value = user.job || '';
 
             let workedDaysCount = 0;
             
-            // Проверяем явки на каждый день месяца
             for (let day = 1; day <= daysInMonth; day++) {
                 const colIndex = 3 + day;
                 const currentDayStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -207,54 +379,63 @@ app.get('/api/attendance/download-excel', async (req, res) => {
                     visit.dateString === currentDayStr
                 );
 
+                const dayCell = row.getCell(colIndex);
                 if (hasScan) {
-                    row.getCell(colIndex).value = 8; // Ставим 8, если был скан
+                    dayCell.value = 8;
                     workedDaysCount++;
                 } else {
-                    // 🌟 Теперь здесь может быть пусто '', или ты можешь руками вписать 'В' в скачанном файле
-                    row.getCell(colIndex).value = ''; 
+                    dayCell.value = ''; // Пусто, если не было скана (сюда можно вписать "В" руками)
                 }
+                
+                dayCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                dayCell.font = { name: 'Times New Roman', size: 9 };
+                dayCell.border = thinBorder;
             }
-            // Индексы финальных колонок после дат
+
             const colBorg = 4 + daysInMonth;
-            const colDniv = colBorg + 1; // 🌟 Колонка "Днів", где число явок уже посчитано сервером
+            const colDniv = colBorg + 1;
             const colDniv2 = colBorg + 2;
-            const colTarif1 = colBorg + 3; // 🌟 Колонка "Тариф 1"
+            const colTarif1 = colBorg + 3;
             const colTarif2 = colBorg + 4;
-            const colDodano = colBorg + 5; // 🌟 Колонка "Додано"
-            const colUtrimano = colBorg + 6; // 🌟 Колонка "Утримано"
-            const colSuma = colBorg + 7;   // 🌟 Колонка "Сума"
+            const colDodano = colBorg + 5;
+            const colUtrimano = colBorg + 6;
+            const colSuma = colBorg + 7;
             const colPrim = colBorg + 8;
 
-            row.getCell(colBorg).value = user.debt || 0;
-            row.getCell(colDniv).value = workedDaysCount; // Сюда бэкенд записывает чистое число (например, 15)
-            row.getCell(colDniv2).value = 0; 
+            row.getCell(colBorg).value = user.debt || '';
+            row.getCell(colDniv).value = workedDaysCount; 
+            row.getCell(colDniv2).value = ''; 
             row.getCell(colTarif1).value = user.tariff || 0;
-            row.getCell(colTarif2).value = 0; 
-            row.getCell(colDodano).value = user.bonuses || 0;
-            row.getCell(colUtrimano).value = user.penalties || 0; 
+            row.getCell(colTarif2).value = ''; 
+            row.getCell(colDodano).value = user.bonuses || '';
+            row.getCell(colUtrimano).value = user.penalties || ''; 
 
-            // Получаем точные адреса ячеек для текущей строки (например, AJ4, AL4 и т.д.)
             const dnivAddress = sheet.getCell(rowIndex, colDniv).address;
             const tarifAddress = sheet.getCell(rowIndex, colTarif1).address;
             const dodanoAddress = sheet.getCell(rowIndex, colDodano).address;
             const utrimanoAddress = sheet.getCell(rowIndex, colUtrimano).address;
 
-            // 🌟 ЖЕЛЕЗНАЯ ФОРМУЛА: Число Дней * Тариф + Добавлено - Удержано
-            // Больше никакой зависимости от букв "В" в календаре!
+            // Формула суммы
             row.getCell(colSuma).value = {
                 formula: `=${dnivAddress}*${tarifAddress}+${dodanoAddress}-${utrimanoAddress}`
             };
 
             row.getCell(colPrim).value = user.notes || '';
-            row.font = { name: 'Times New Roman', size: 10 };
+
+            // Стилизация финальных колонок (шрифты, выравнивание и сетка)
+            for (let c = 1; c <= startFinanceCol + 8; c++) {
+                const cell = row.getCell(c);
+                cell.border = thinBorder;
+                cell.font = { name: 'Times New Roman', size: 9 };
+                if (c !== 2 && c !== 3 && c !== colPrim) { 
+                    cell.alignment = { horizontal: 'center', vertical: 'middle' }; // Все цифры по центру
+                } else {
+                    cell.alignment = { horizontal: 'left', vertical: 'middle' }; // Текст по левому краю
+                }
+            }
         });
 
-
-        sheet.getColumn(2).width = 35; // Автоширина для ФИО
-        sheet.getColumn(3).width = 15; // Автоширина для должностей
-
-        // 5. Настройка заголовков для скачивания файла браузером
+        // --- ОТПРАВКА ГОТОВОГО ФАЙЛА ---
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename=Tabel_${month}_${year}.xlsx`);
 
@@ -262,10 +443,11 @@ app.get('/api/attendance/download-excel', async (req, res) => {
         res.end();
 
     } catch (error) {
-        console.error('Ошибка генерации Excel:', error);
+        console.error('Ошибка генерации красивого Excel:', error);
         res.status(500).send('Ошибка сервера при создании Excel');
     }
 });
+
 
 // --- ЗАПУСК СЕРВЕРА (Всегда самый конец файла) ---
 app.listen(PORT, () => {
