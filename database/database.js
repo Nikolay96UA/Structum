@@ -186,7 +186,7 @@ app.get('/api/attendance/download-excel', async (req, res) => {
         const users = await User.find().sort({ name: 1 });
         const visits = await Visit.find();
 
-        // 4. Заполняем строки данными сотрудников
+              // 4. Заполняем строки данными сотрудников
         users.forEach((user, index) => {
             const rowIndex = 4 + index; 
             const row = sheet.getRow(rowIndex);
@@ -208,9 +208,10 @@ app.get('/api/attendance/download-excel', async (req, res) => {
                 );
 
                 if (hasScan) {
-                    row.getCell(colIndex).value = 8; // Ставим "8" при наличии сканирования
+                    row.getCell(colIndex).value = 8; // Ставим 8, если был скан
                     workedDaysCount++;
                 } else {
+                    // 🌟 Теперь здесь может быть пусто '', или ты можешь руками вписать 'В' в скачанном файле
                     row.getCell(colIndex).value = ''; 
                 }
             }
@@ -228,26 +229,31 @@ app.get('/api/attendance/download-excel', async (req, res) => {
 
             row.getCell(colBorg).value = user.debt || 0;
             row.getCell(colDniv).value = workedDaysCount; 
-            row.getCell(colDniv2).value = ''; 
+            row.getCell(colDniv2).value = 0; 
             row.getCell(colTarif1).value = user.tariff || 0;
-            row.getCell(colTarif2).value = ''; 
+            row.getCell(colTarif2).value = 0; 
             row.getCell(colDodano).value = user.bonuses || 0;
             row.getCell(colUtrimano).value = user.penalties || 0; 
 
-            // Генерируем динамические адреса ячеек для формулы Excel
-            const dnivLetter = sheet.getCell(rowIndex, colDniv).address;
+            // Получаем точные адреса ячеек (например: D4, AH4 и т.д.)
+            const firstDayAddress = sheet.getCell(rowIndex, 4).address; // Ячейка 1-го числа месяца
+            const lastDayAddress = sheet.getCell(rowIndex, 3 + daysInMonth).address; // Ячейка последнего числа месяца
+            
             const tarifLetter = sheet.getCell(rowIndex, colTarif1).address;
             const dodanoLetter = sheet.getCell(rowIndex, colDodano).address;
             const utrimanoLetter = sheet.getCell(rowIndex, colUtrimano).address;
 
-            // Формула автоматического подсчета итоговой суммы: (Дней * Тариф) + Добавлено - Удержано
+            // 🌟 УМНАЯ ФОРМУЛА: СУМПРОДУКТ перемножает весь диапазон дней на тариф, автоматически заменяя буквы типа "В" на 0.
+            // Итоговый вид формулы в Excel: =SUMPRODUCT(D4:AH4; --(D4:AH4<>"В"))/8 * Тариф + Добавлено - Удержано
+            // Но так как нам нужно просто умножить фактически отработанные часы на тариф (где тариф указан ЗА ДЕНЬ, т.е. за 8 часов), мы делим сумму часов на 8.
             row.getCell(colSuma).value = {
-                formula: `(${dnivLetter}*${tarifLetter})+${dodanoLetter}-${utrimanoLetter}`
+                formula: `=SUMPRODUCT(${firstDayAddress}:${lastDayAddress})*${tarifLetter}/8+${dodanoLetter}-${utrimanoLetter}`
             };
 
             row.getCell(colPrim).value = user.notes || '';
             row.font = { name: 'Times New Roman', size: 10 };
         });
+
 
         sheet.getColumn(2).width = 35; // Автоширина для ФИО
         sheet.getColumn(3).width = 15; // Автоширина для должностей
