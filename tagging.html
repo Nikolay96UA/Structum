@@ -21,18 +21,56 @@
             <p style="color: blue;" id="result"></p>
         </div>
     </div>
-    <script>
-        const html5Qrcode = new Html5Qrcode('reader');
-        const qrCodeSuccessCallback = (decodedText, decodedResult)=>{
-            if(decodedText){
-                document.getElementById('show').style.display = 'block';
-                document.getElementById('result').textContent = decodedText;
-                html5Qrcode.stop();
+  <script>
+    const html5Qrcode = new Html5Qrcode('reader');
+    
+    // Функция отправки отметки на сервер
+    async function sendAttendance(userId) {
+        try {
+            // Отправляем ID сотрудника на бэкенд
+            const response = await fetch('https://onrender.com', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userId })
+            });
+
+            const data = await response.json();
+            const resultElement = document.getElementById('result');
+            document.getElementById('show').style.display = 'block';
+
+            if (response.ok) {
+                resultElement.style.color = 'green';
+                resultElement.textContent = `✅ ${data.message}`;
+            } else {
+                resultElement.style.color = 'red';
+                resultElement.textContent = `⚠️ ${data.message}`;
             }
+        } catch (error) {
+            console.error(error);
+            alert('Ошибка подключения к серверу отметок');
         }
-        const config = {fps:10, qrbox:{width:250, height:250}}
-        html5Qrcode.start({facingMode:"environment"}, config,qrCodeSuccessCallback );
-    </script>
+    }
+
+    const qrCodeSuccessCallback = async (decodedText, decodedResult) => {
+        if (decodedText) {
+            // 1. Временно останавливаем камеру, чтобы она не сканировала один код много раз
+            await html5Qrcode.stop();
+            
+            // 2. Отправляем ID на бэкенд и ждем записи в базу
+            await sendAttendance(decodedText);
+            
+            // 3. Через 3 секунды автоматически включаем камеру обратно для следующего человека
+            setTimeout(() => {
+                document.getElementById('show').style.display = 'none';
+                html5Qrcode.start({facingMode:"environment"}, config, qrCodeSuccessCallback);
+            }, 3000);
+        }
+    }
+    
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    html5Qrcode.start({facingMode:"environment"}, config, qrCodeSuccessCallback);
+</script>
+
     </body>
 
    

@@ -25,8 +25,10 @@ mongoose.connect(MONGO_URI)
 const userSchema = new mongoose.Schema({
     name: String,
     job: String,
+    tariff: { type: Number, default: 2000 }, // Добавили тариф (по умолчанию 2000, если не указан)
     createdAt: { type: Date, default: Date.now }
 });
+
 
 const User = mongoose.model('User', userSchema);
 
@@ -96,8 +98,117 @@ app.post('/api/tavel/upload', upload.single('excelFile'), async (req, res) => {
     }
 });
 
+// СХЕМА ДЛЯ ПОСЕЩЕНИЙ
+const visitSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Ссылка на сотрудника
+    dateString: String, // Дата в текстовом формате "2026-06-24" для легкого поиска
+    scannedAt: { type: Date, default: Date.now }
+});
+const Visit = mongoose.model('Visit', visitSchema);
+
+// МАРШРУТ ДЛЯ СКАНИРОВАНИЯ QR
+app.post('/api/attendance/scan', async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        // Проверяем валидность ID и наличие пользователя
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: 'Некорректный формат QR-кода' });
+        }
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'Сотрудник не найден в системе' });
+        }
+
+        // Получаем сегодняшнюю дату в формате ГГГГ-ММ-ДД (например, "2026-06-24")
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        // Проверяем, не отмечался ли он уже сегодня
+        const alreadyScanned = await Visit.findOne({ userId, dateString: todayStr });
+        if (alreadyScanned) {
+            return res.status(400).json({ message: `${user.name} уже отмечен сегодня!` });
+        }
+
+        // Записываем приход на работу
+        const newVisit = new Visit({ userId, dateString: todayStr });
+        await newVisit.save();
+
+        res.json({ success: true, message: `Отмечено: ${user.name} (${user.job})` });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Ошибка сервера при фиксации времени' });
+    }
+});
+
 
 // --- ЗАПУСК СЕРВЕРА (Всегда пишется в самом конце файла!) ---
 app.listen(PORT, () => {
     console.log(`📡 Бэкенд-сервер запущен на порту ${PORT}`);
+});
+
+// Схема для записи каждого факта сканирования QR-кода
+const visitSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Ссылка на ID сотрудника
+    dateString: String, // Дата в формате "YYYY-MM-DD" (чтобы легко группировать по дням)
+    scannedAt: { type: Date, default: Date.now } // Точное время сканирования
+});
+
+const Visit = mongoose.model('Visit', visitSchema);
+
+// Маршрут, который вызывается при сканировании QR-кода
+app.post('/api/attendance/scan', async (req, res) => {
+    try {
+        const { userId } = req.body; // Получаем ID из QR-кода
+
+        // Проверяем, существует ли вообще такой сотрудник в базе
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'Сотрудник не найден в базе данных' });
+        }
+
+        // Получаем сегодняшнюю дату в формате "2026-06-24"
+        const today = new Date().toISOString().split('T')[0];
+
+        // Проверяем, не сканировался ли он уже сегодня (чтобы избежать дубликатов)
+        const alreadyScanned = await Visit.findOne({ userId, dateString: today });
+        if (alreadyScanned) {
+            return res.status(400).json({ message: `Сотрудник ${user.name} уже отметился сегодня!` });
+        }
+
+        // Если всё ок, записываем посещение
+        const newVisit = new Visit({ userId, dateString: today });
+        await newVisit.save();
+
+        res.json({ success: true, message: `Доступ разрешен: ${user.name}`, userName: user.name });
+    } catch (error) {
+        res.status(500).json({ message: 'Ошибка сервера при сканировании' });
+    }
+});
+
+app.get('/api/attendance/report', async (req, res) => {
+    try {
+        const users = await User.find();
+        const visits = await Visit.find(); // Берем все отметки
+
+        // Формируем структуру табеля для фронтенда
+        const reportData = users.map((user, index) => {
+            // Считаем сколько раз этот пользователь отметился в базе
+            const userVisits = visits.filter(v => v.userId.toString() === user._id.toString());
+            const daysCount = userVisits.length;
+            const totalSum = daysCount * (user.tariff || 0);
+
+            return {
+                "№ п/п": index + 1,
+                "ПІБ": user.name,
+                "Посада": user.job,
+                "Днів": daysCount,
+                "Тариф": user.tariff || 0,
+                "Сума": totalSum
+            };
+        });
+
+        res.json({ success: true, data: reportData });
+    } catch (error) {
+        res.status(500).json({ message: 'Ошибка генерации отчета' });
+    }
 });

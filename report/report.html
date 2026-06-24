@@ -110,33 +110,43 @@ function renderExcelTable(data) {
     tHead.innerHTML = '';
     tBody.innerHTML = '';
 
-    // 1. ЯВНО ПРОПИСЫВАЕМ НАЗВАНИЯ КОЛОНОК (напишите точно так, как они называются у вас в Excel!)
-    const myColumns = ['ФИО', 'Посада', 'Кількість годин', 'Дні']; 
-    
-    // Рисуем правильную шапку таблицы на экране
-    myColumns.forEach(col => {
+    if (!data || data.length === 0) {
+        tBody.innerHTML = '<tr><td colspan="100%">Сервер вернул пустой массив данных</td></tr>';
+        return;
+    }
+
+    // 1. АВТОМАТИЧЕСКИ НАХОДИМ ВСЕ СУЩЕСТВУЮЩИЕ КОЛОНКИ
+    // Собираем уникальные ключи со всех строк, чтобы ничего не потерять
+    const allKeys = new Set();
+    data.forEach(row => {
+        Object.keys(row).forEach(key => allKeys.add(key));
+    });
+    const columns = Array.from(allKeys);
+
+    // 2. СТРОИМ ШАПКУ ТАБЛИЦЫ (Выводим оригинальные названия из Excel)
+    columns.forEach(colName => {
         const th = document.createElement('th');
-        th.textContent = col;
+        // Очищаем имя от системных переносов строк (\r\n), если они есть
+        th.textContent = colName.replace(/[\r\n]+/g, ' '); 
         tHead.appendChild(th);
     });
 
-    // 2. ЗАПОЛНЯЕМ СТРОКИ ДАННЫМИ
+    // 3. ЗАПОЛНЯЕМ ТАБЛИЦУ СТРОКАМИ ДАННЫХ
     data.forEach(row => {
-        // Проверяем, что это не пустая строка и в ней есть хоть какие-то данные по сотруднику
-        if (row['ФИО'] || row['Посада']) { 
-            const tr = document.createElement('tr');
-            
-            myColumns.forEach(col => {
-                const td = document.createElement('td');
-                // Берем данные из ячейки Excel. Если там пусто, ставим прочерк
-                td.textContent = row[col] !== undefined ? row[col] : '—';
-                tr.appendChild(td);
-            });
-            
-            tBody.appendChild(tr);
-        }
+        const tr = document.createElement('tr');
+        
+        columns.forEach(colName => {
+            const td = document.createElement('td');
+            // Берем значение ячейки. Если пусто — ставим прочерк
+            td.textContent = row[colName] !== undefined ? row[colName] : '—';
+            tr.appendChild(td);
+        });
+        
+        tBody.appendChild(tr);
     });
 }
+
+
     </script>
 </body>
 </html>
