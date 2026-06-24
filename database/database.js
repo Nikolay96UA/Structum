@@ -142,9 +142,7 @@ app.post('/api/attendance/scan', async (req, res) => {
 
 
 // --- ЗАПУСК СЕРВЕРА (Всегда пишется в самом конце файла!) ---
-app.listen(PORT, () => {
-    console.log(`📡 Бэкенд-сервер запущен на порту ${PORT}`);
-});
+
 
 // Схема для записи каждого факта сканирования QR-кода
 const visitSchema = new mongoose.Schema({
@@ -211,4 +209,8 @@ app.get('/api/attendance/report', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Ошибка генерации отчета' });
     }
+});
+
+app.listen(PORT, () => {
+    console.log(`📡 Бэкенд-сервер запущен на порту ${PORT}`);
 });
