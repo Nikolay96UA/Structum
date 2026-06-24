@@ -215,39 +215,35 @@ app.get('/api/attendance/download-excel', async (req, res) => {
                     row.getCell(colIndex).value = ''; 
                 }
             }
-
             // Индексы финальных колонок после дат
             const colBorg = 4 + daysInMonth;
-            const colDniv = colBorg + 1;
+            const colDniv = colBorg + 1; // 🌟 Колонка "Днів", где число явок уже посчитано сервером
             const colDniv2 = colBorg + 2;
-            const colTarif1 = colBorg + 3;
+            const colTarif1 = colBorg + 3; // 🌟 Колонка "Тариф 1"
             const colTarif2 = colBorg + 4;
-            const colDodano = colBorg + 5;
-            const colUtrimano = colBorg + 6;
-            const colSuma = colBorg + 7;
+            const colDodano = colBorg + 5; // 🌟 Колонка "Додано"
+            const colUtrimano = colBorg + 6; // 🌟 Колонка "Утримано"
+            const colSuma = colBorg + 7;   // 🌟 Колонка "Сума"
             const colPrim = colBorg + 8;
 
             row.getCell(colBorg).value = user.debt || 0;
-            row.getCell(colDniv).value = workedDaysCount; 
+            row.getCell(colDniv).value = workedDaysCount; // Сюда бэкенд записывает чистое число (например, 15)
             row.getCell(colDniv2).value = 0; 
             row.getCell(colTarif1).value = user.tariff || 0;
             row.getCell(colTarif2).value = 0; 
             row.getCell(colDodano).value = user.bonuses || 0;
             row.getCell(colUtrimano).value = user.penalties || 0; 
 
-            // Получаем точные адреса ячеек (например: D4, AH4 и т.д.)
-            const firstDayAddress = sheet.getCell(rowIndex, 4).address; // Ячейка 1-го числа месяца
-            const lastDayAddress = sheet.getCell(rowIndex, 3 + daysInMonth).address; // Ячейка последнего числа месяца
-            
-            const tarifLetter = sheet.getCell(rowIndex, colTarif1).address;
-            const dodanoLetter = sheet.getCell(rowIndex, colDodano).address;
-            const utrimanoLetter = sheet.getCell(rowIndex, colUtrimano).address;
+            // Получаем точные адреса ячеек для текущей строки (например, AJ4, AL4 и т.д.)
+            const dnivAddress = sheet.getCell(rowIndex, colDniv).address;
+            const tarifAddress = sheet.getCell(rowIndex, colTarif1).address;
+            const dodanoAddress = sheet.getCell(rowIndex, colDodano).address;
+            const utrimanoAddress = sheet.getCell(rowIndex, colUtrimano).address;
 
-            // 🌟 УМНАЯ ФОРМУЛА: СУМПРОДУКТ перемножает весь диапазон дней на тариф, автоматически заменяя буквы типа "В" на 0.
-            // Итоговый вид формулы в Excel: =SUMPRODUCT(D4:AH4; --(D4:AH4<>"В"))/8 * Тариф + Добавлено - Удержано
-            // Но так как нам нужно просто умножить фактически отработанные часы на тариф (где тариф указан ЗА ДЕНЬ, т.е. за 8 часов), мы делим сумму часов на 8.
+            // 🌟 ЖЕЛЕЗНАЯ ФОРМУЛА: Число Дней * Тариф + Добавлено - Удержано
+            // Больше никакой зависимости от букв "В" в календаре!
             row.getCell(colSuma).value = {
-                formula: `=SUMPRODUCT(${firstDayAddress}:${lastDayAddress})*${tarifLetter}/8+${dodanoLetter}-${utrimanoLetter}`
+                formula: `=${dnivAddress}*${tarifAddress}+${dodanoAddress}-${utrimanoAddress}`
             };
 
             row.getCell(colPrim).value = user.notes || '';
