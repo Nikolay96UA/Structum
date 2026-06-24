@@ -75,21 +75,20 @@ app.delete('/api/users/:id', async (req, res) => {
 // --- МАРШРУТ API ДЛЯ ТАБЕЛЯ EXCEL ---
 
 // 4. Загрузка файла Excel, парсинг и отправка JSON обратно
+// ОБНОВИТЕ ЭТОТ МАРШРУТ НА СЕРВЕРЕ:
 app.post('/api/tavel/upload', upload.single('excelFile'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'Файл не загружен' });
         }
 
-        // Читаем файл Excel из буфера памяти
         const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
-        const sheetName = workbook.SheetNames[0]; // Берем самый первый лист таблицы
+        const sheetName = workbook.SheetNames[0]; // Берем первый лист
         const worksheet = workbook.Sheets[sheetName];
         
-        // Превращаем строки Excel в удобный массив объектов
-        const rawData = XLSX.utils.sheet_to_json(worksheet);
+        // ВАЖНО: добавили { range: 2 }, чтобы пропустить шапку и читать со строки заголовков
+        const rawData = XLSX.utils.sheet_to_json(worksheet, { range: 2 });
 
-        // Отправляем готовые данные обратно на фронтенд
         res.json({ success: true, data: rawData });
     } catch (error) {
         console.error(error);

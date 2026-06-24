@@ -106,31 +106,37 @@
         // });
 
         // Функция отрисовки таблицы на основе полученного JSON от сервера
-        function renderExcelTable(data) {
-            tHead.innerHTML = '';
-            tBody.innerHTML = '';
+function renderExcelTable(data) {
+    tHead.innerHTML = '';
+    tBody.innerHTML = '';
 
-            // Извлекаем имена колонок из ключей первого объекта таблицы
-            const columns = Object.keys(data[0]);
+    // 1. ЯВНО ПРОПИСЫВАЕМ НАЗВАНИЯ КОЛОНОК (напишите точно так, как они называются у вас в Excel!)
+    const myColumns = ['ФИО', 'Посада', 'Кількість годин', 'Дні']; 
+    
+    // Рисуем правильную шапку таблицы на экране
+    myColumns.forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col;
+        tHead.appendChild(th);
+    });
+
+    // 2. ЗАПОЛНЯЕМ СТРОКИ ДАННЫМИ
+    data.forEach(row => {
+        // Проверяем, что это не пустая строка и в ней есть хоть какие-то данные по сотруднику
+        if (row['ФИО'] || row['Посада']) { 
+            const tr = document.createElement('tr');
             
-            // Заполняем шапку таблицы
-            columns.forEach(col => {
-                const th = document.createElement('th');
-                th.textContent = col;
-                tHead.appendChild(th);
+            myColumns.forEach(col => {
+                const td = document.createElement('td');
+                // Берем данные из ячейки Excel. Если там пусто, ставим прочерк
+                td.textContent = row[col] !== undefined ? row[col] : '—';
+                tr.appendChild(td);
             });
-
-            // Заполняем строки данными
-            data.forEach(row => {
-                const tr = document.createElement('tr');
-                columns.forEach(col => {
-                    const td = document.createElement('td');
-                    td.textContent = row[col] !== undefined ? row[col] : '—';
-                    tr.appendChild(td);
-                });
-                tBody.appendChild(tr);
-            });
+            
+            tBody.appendChild(tr);
         }
+    });
+}
     </script>
 </body>
 </html>
