@@ -18,7 +18,7 @@ mongoose.connect(MONGO_URI)
 // --- СХЕМА ПОЛЬЗОВАТЕЛЯ ---
 const userSchema = new mongoose.Schema({
     name: String,
-    age: Number,
+    job: String,
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -41,7 +41,7 @@ app.post('/api/users', async (req, res) => {
     try {
         const newUser = new User({
             name: req.body.name,
-            age: req.body.age
+            job: req.body.job
         });
         await newUser.save(); 
         res.status(201).json({ success: true, user: newUser });

@@ -28,7 +28,7 @@
     <h2>Добавить пользователя в JSON БД</h2>
     <form id="userForm">
         <input type="text" id="userName" placeholder="Имя" required><br>
-        <input type="number" id="userAge" placeholder="Возраст" required><br>
+        <input type="text" id="userJob" placeholder="Посада" required><br>
         <button type="submit">Сохранить в базу</button>
     </form>
 
@@ -54,7 +54,7 @@ const API_URL = 'https://structum.onrender.com/api/users';
             list.innerHTML = ''; 
             users.forEach(user => {
                 const li = document.createElement('li');
-                li.textContent = `${user.name} (${user.age} лет) — ID: ${user.id}`;
+                li.textContent = `${user.name} (${user.job} ) — ID: ${user.id}`;
                 list.appendChild(li);
             });
         } catch (error) {
@@ -68,13 +68,13 @@ const API_URL = 'https://structum.onrender.com/api/users';
         e.preventDefault(); 
 
         const name = document.getElementById('userName').value;
-        const age = document.getElementById('userAge').value;
+        const job = document.getElementById('userJob').value;
 
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, age })
+                body: JSON.stringify({ name, job })
             });
 
             if (response.ok) {
