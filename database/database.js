@@ -49,7 +49,8 @@ app.post('/api/users', async (req, res) => {
     try {
         const newUser = new User({ 
             name: req.body.name, 
-            job: req.body.job 
+            job: req.body.job,
+            tariff: req.body.tariff // ✅ Теперь тариф будет сохраняться из формы!
         });
         await newUser.save(); 
         res.status(201).json({ success: true, user: newUser });
@@ -73,11 +74,9 @@ app.delete('/api/users/:id', async (req, res) => {
     }
 });
 
-
 // --- МАРШРУТ API ДЛЯ ТАБЕЛЯ EXCEL ---
 
 // 4. Загрузка файла Excel, парсинг и отправка JSON обратно
-// ОБНОВИТЕ ЭТОТ МАРШРУТ НА СЕРВЕРЕ:
 app.post('/api/tavel/upload', upload.single('excelFile'), async (req, res) => {
     try {
         if (!req.file) {
@@ -85,10 +84,10 @@ app.post('/api/tavel/upload', upload.single('excelFile'), async (req, res) => {
         }
 
         const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
-        const sheetName = workbook.SheetNames[0]; // Берем первый лист
-        const worksheet = workbook.Sheets[sheetName];
+        const sheetName = workbook.SheetNames[0]; // Извлекаем имя первого листа
+        const worksheet = workbook.Sheets[sheetName]; // Подставляем имя листа
         
-        // ВАЖНО: добавили { range: 2 }, чтобы пропустить шапку и читать со строки заголовков
+        // Читаем со строки №3 (индекс 2), пропуская объединенную шапку
         const rawData = XLSX.utils.sheet_to_json(worksheet, { range: 2 });
 
         res.json({ success: true, data: rawData });
@@ -98,99 +97,58 @@ app.post('/api/tavel/upload', upload.single('excelFile'), async (req, res) => {
     }
 });
 
-// СХЕМА ДЛЯ ПОСЕЩЕНИЙ
+// --- СХЕМА ДЛЯ ПОСЕЩЕНИЙ ---
 const visitSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Ссылка на сотрудника
     dateString: String, // Дата в текстовом формате "2026-06-24" для легкого поиска
     scannedAt: { type: Date, default: Date.now }
 });
+
 const Visit = mongoose.model('Visit', visitSchema);
 
-// МАРШРУТ ДЛЯ СКАНИРОВАНИЯ QR
+// --- МАРШРУТ ДЛЯ СКАНИРОВАНИЯ QR-КОДА ---
 app.post('/api/attendance/scan', async (req, res) => {
     try {
         const { userId } = req.body;
 
-        // Проверяем валидность ID и наличие пользователя
+        // 1. Проверяем валидность формата ID, чтобы сервер не падал от левых QR-кодов
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ message: 'Некорректный формат QR-кода' });
         }
+
+        // 2. Проверяем наличие пользователя в базе
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'Сотрудник не найден в системе' });
         }
 
-        // Получаем сегодняшнюю дату в формате ГГГГ-ММ-ДД (например, "2026-06-24")
+        // 3. Получаем сегодняшнюю дату (индекс [0] берет только ГГГГ-ММ-ДД)
         const todayStr = new Date().toISOString().split('T')[0];
 
-        // Проверяем, не отмечался ли он уже сегодня
+        // 4. Проверяем дубликаты сканирования за сегодня
         const alreadyScanned = await Visit.findOne({ userId, dateString: todayStr });
         if (alreadyScanned) {
             return res.status(400).json({ message: `${user.name} уже отмечен сегодня!` });
         }
 
-        // Записываем приход на работу
+        // 5. Записываем приход на работу
         const newVisit = new Visit({ userId, dateString: todayStr });
         await newVisit.save();
 
-        res.json({ success: true, message: `Отмечено: ${user.name} (${user.job})` });
+        res.json({ success: true, message: `Отмечено: ${user.name} (${user.job})`, userName: user.name });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Ошибка сервера при фиксации времени' });
     }
 });
 
-
-// --- ЗАПУСК СЕРВЕРА (Всегда пишется в самом конце файла!) ---
-
-
-// Схема для записи каждого факта сканирования QR-кода
-const visitSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Ссылка на ID сотрудника
-    dateString: String, // Дата в формате "YYYY-MM-DD" (чтобы легко группировать по дням)
-    scannedAt: { type: Date, default: Date.now } // Точное время сканирования
-});
-
-const Visit = mongoose.model('Visit', visitSchema);
-
-// Маршрут, который вызывается при сканировании QR-кода
-app.post('/api/attendance/scan', async (req, res) => {
-    try {
-        const { userId } = req.body; // Получаем ID из QR-кода
-
-        // Проверяем, существует ли вообще такой сотрудник в базе
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: 'Сотрудник не найден в базе данных' });
-        }
-
-        // Получаем сегодняшнюю дату в формате "2026-06-24"
-        const today = new Date().toISOString().split('T')[0];
-
-        // Проверяем, не сканировался ли он уже сегодня (чтобы избежать дубликатов)
-        const alreadyScanned = await Visit.findOne({ userId, dateString: today });
-        if (alreadyScanned) {
-            return res.status(400).json({ message: `Сотрудник ${user.name} уже отметился сегодня!` });
-        }
-
-        // Если всё ок, записываем посещение
-        const newVisit = new Visit({ userId, dateString: today });
-        await newVisit.save();
-
-        res.json({ success: true, message: `Доступ разрешен: ${user.name}`, userName: user.name });
-    } catch (error) {
-        res.status(500).json({ message: 'Ошибка сервера при сканировании' });
-    }
-});
-
+// --- МАРШРУТ ДЛЯ ГЕНЕРАЦИИ АВТО-ТАБЕЛЯ ---
 app.get('/api/attendance/report', async (req, res) => {
     try {
         const users = await User.find();
-        const visits = await Visit.find(); // Берем все отметки
+        const visits = await Visit.find(); 
 
-        // Формируем структуру табеля для фронтенда
         const reportData = users.map((user, index) => {
-            // Считаем сколько раз этот пользователь отметился в базе
             const userVisits = visits.filter(v => v.userId.toString() === user._id.toString());
             const daysCount = userVisits.length;
             const totalSum = daysCount * (user.tariff || 0);
@@ -211,6 +169,7 @@ app.get('/api/attendance/report', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`📡 Бэкенд-сервер запущен на порту ${PORT}`);
+// --- ЗАПУСК СЕРВЕРА (Всегда пишется в самом конце файла с хостом 0.0.0.0) ---
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`📡 Бэкенд-сервер успешно запущен на порту ${PORT}`);
 });
