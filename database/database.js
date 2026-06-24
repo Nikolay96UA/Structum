@@ -392,7 +392,7 @@ app.get('/api/attendance/download-excel', async (req, res) => {
                 dayCell.border = thinBorder;
             }
 
-            const colBorg = 4 + daysInMonth;
+                      const colBorg = 4 + daysInMonth;
             const colDniv = colBorg + 1;
             const colDniv2 = colBorg + 2;
             const colTarif1 = colBorg + 3;
@@ -402,27 +402,29 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             const colSuma = colBorg + 7;
             const colPrim = colBorg + 8;
 
-            row.getCell(colBorg).value = user.debt || '';
+            // Заполняем значения. Если в базе пусто или undefined — ставим null (в Excel это будет чистая пустая ячейка)
+            row.getCell(colBorg).value = user.debt || null;
             row.getCell(colDniv).value = workedDaysCount; 
-            row.getCell(colDniv2).value = ''; 
+            row.getCell(colDniv2).value = null; 
             row.getCell(colTarif1).value = user.tariff || 0;
-            row.getCell(colTarif2).value = ''; 
-            row.getCell(colDodano).value = user.bonuses || '';
-            row.getCell(colUtrimano).value = user.penalties || ''; 
+            row.getCell(colTarif2).value = null; 
+            row.getCell(colDodano).value = user.bonuses || null;
+            row.getCell(colUtrimano).value = user.penalties || null; 
 
-                        // Динамически получаем точные буквы колонок прямо из exceljs
-            const dnivLetter = sheet.getCell(rowIndex, colDniv).address.replace(/[0-9]/g, ''); // Буква колонки "Днів" (AI)
-            const tarifLetter = sheet.getCell(rowIndex, colTarif1).address.replace(/[0-9]/g, ''); // Буква колонки "Тариф 1" (AK)
-            const dodanoLetter = sheet.getCell(rowIndex, colDodano).address.replace(/[0-9]/g, ''); // Буква колонки "Додано" (AM)
-            const utrimanoLetter = sheet.getCell(rowIndex, colUtrimano).address.replace(/[0-9]/g, ''); // Буква колонки "Утримано" (AN)
+            // Автоматически определяем буквы колонок
+            const dnivLetter = sheet.getCell(rowIndex, colDniv).address.replace(/[0-9]/g, '');     // AI
+            const tarifLetter = sheet.getCell(rowIndex, colTarif1).address.replace(/[0-9]/g, '');   // AK
+            const dodanoLetter = sheet.getCell(rowIndex, colDodano).address.replace(/[0-9]/g, '');   // AM
+            const utrimanoLetter = sheet.getCell(rowIndex, colUtrimano).address.replace(/[0-9]/g, ''); // AN
 
-            // Прописываем чистую формулу без привязки к жестким индексам: =AI4*AK4+AM4-AN4
+            // 🌟 СВЕРХНАДЕЖНАЯ ФОРМУЛА: перемножаем дни на тариф, а пустые ячейки бонусов и штрафов оборачиваем в СУММ.
+            // Итоговый вид в Excel: =AI4*AK4+SUM(AM4)-SUM(AN4)
             row.getCell(colSuma).value = {
-                formula: `=${dnivLetter}${rowIndex}*${tarifLetter}${rowIndex}+${dodanoLetter}${rowIndex}-${utrimanoLetter}${rowIndex}`
+                formula: `=${dnivLetter}${rowIndex}*${tarifLetter}${rowIndex}+SUM(${dodanoLetter}${rowIndex})-SUM(${utrimanoLetter}${rowIndex})`
             };
 
-
             row.getCell(colPrim).value = user.notes || '';
+
 
             // Стилизация финальных колонок (шрифты, выравнивание и сетка)
             for (let c = 1; c <= startFinanceCol + 8; c++) {
