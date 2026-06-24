@@ -16,14 +16,40 @@ mongoose.connect(MONGO_URI)
   .catch(err => console.error('❌ Ошибка подключения к базе:', err));
 
 // --- СХЕМА ПОЛЬЗОВАТЕЛЯ ---
+// const userSchema = new mongoose.Schema({
+//     name: String,
+//     job: String,
+//     id: Number,
+//     createdAt: { type: Date, default: Date.now }
+// });
+
+// const User = mongoose.model('User', userSchema);
+// 1. ИСПРАВЛЯЕМ СХЕМУ (заменяем age на job)
 const userSchema = new mongoose.Schema({
     name: String,
-    job: String,
-    id: Number,
+    job: String, // Теперь здесь строка вместо числа
     createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', userSchema);
+
+// 2. ИСПРАВЛЯЕМ МАРШРУТ ДОБАВЛЕНИЯ
+app.post('/api/users', async (req, res) => {
+    try {
+        // Убедитесь, что сервер берет из req.body именно job!
+        const newUser = new User({ 
+            name: req.body.name, 
+            job: req.body.job 
+        });
+        
+        await newUser.save(); 
+        res.status(201).json({ success: true, user: newUser });
+    } catch (error) {
+        // Если схема не совпадает, сервер как раз выкидывает ошибку 400
+        res.status(400).json({ message: 'Ошибка при сохранении' }); 
+    }
+});
+
 
 // --- МАРШРУТЫ API ---
 
@@ -37,20 +63,36 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
-// 2. Добавить нового в базу
 app.post('/api/users', async (req, res) => {
     try {
-        const newUser = new User({
-            name: req.body.name,
-            job: req.body.job,
-            id: req.body.id
+        // Убедитесь, что сервер берет из req.body именно job!
+        const newUser = new User({ 
+            name: req.body.name, 
+            job: req.body.job 
         });
+        
         await newUser.save(); 
         res.status(201).json({ success: true, user: newUser });
     } catch (error) {
-        res.status(400).json({ message: 'Ошибка при сохранении' });
+        // Если схема не совпадает, сервер как раз выкидывает ошибку 400
+        res.status(400).json({ message: 'Ошибка при сохранении' }); 
     }
 });
+
+// 2. Добавить нового в базу
+// app.post('/api/users', async (req, res) => {
+//     try {
+//         const newUser = new User({
+//             name: req.body.name,
+//             job: req.body.job,
+//             id: req.body.id
+//         });
+//         await newUser.save(); 
+//         res.status(201).json({ success: true, user: newUser });
+//     } catch (error) {
+//         res.status(400).json({ message: 'Ошибка при сохранении' });
+//     }
+// });
 
 app.listen(PORT, () => {
     console.log(`📡 Бэкенд-сервер запущен на порту ${PORT}`);

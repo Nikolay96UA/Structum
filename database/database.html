@@ -37,61 +37,6 @@
 
 
 
-<!-- <script>
-    const form = document.getElementById('userForm');
-    const list = document.getElementById('usersList');
-    
-    // Ссылка на ваш работающий бэкенд на Render
-    const API_URL = 'https://structum.onrender.com/api/users';
-
-    // Функция для загрузки списка пользователей
-    async function loadUsers() {
-        list.innerHTML = 'Загрузка...';
-        try {
-            const response = await fetch(API_URL);
-            const users = await response.json();
-            
-            list.innerHTML = ''; 
-            
-            users.forEach((user, index) => {
-                const li = document.createElement('li');
-                
-                li.textContent = `${index + 1}. | ${user.name} (${user.job})`;
-                list.appendChild(li);
-            });
-        } catch (error) {
-            list.innerHTML = 'Ошибка подключения к серверу Node.js';
-            console.error(error);
-        }
-    }
-
-    // Обработчик отправки формы
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault(); 
-
-        const name = document.getElementById('userName').value;
-        const job = document.getElementById('userJob').value;
-
-        try {
-            // Отправляем на сервер ТОЛЬКО имя и работу. ID база создаст сама!
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, job })
-            });
-
-            if (response.ok) {
-                form.reset(); 
-                loadUsers();  // Перерисовываем список с новыми номерами
-            }
-        } catch (error) {
-            alert('Не удалось сохранить данные. Проверьте сеть!');
-        }
-    });
-
-    // Загружаем пользователей сразу при открытии страницы
-    loadUsers();
-</script> -->
 
 
 <script>
