@@ -19,6 +19,7 @@ mongoose.connect(MONGO_URI)
 const userSchema = new mongoose.Schema({
     name: String,
     job: String,
+    id: Number,
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -41,7 +42,8 @@ app.post('/api/users', async (req, res) => {
     try {
         const newUser = new User({
             name: req.body.name,
-            job: req.body.job
+            job: req.body.job,
+            id: req.body.id
         });
         await newUser.save(); 
         res.status(201).json({ success: true, user: newUser });
@@ -52,4 +54,21 @@ app.post('/api/users', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`📡 Бэкенд-сервер запущен на порту ${PORT}`);
+});
+
+// 3. Удалить пользователя по его ID из MongoDB
+app.delete('/api/users/:id', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        // Находим в MongoDB документ по ID и удаляем его
+        const deletedUser = await User.findByIdAndDelete(userId);
+        
+        if (!deletedUser) {
+            return res.status(404).json({ message: 'Пользователь не найден' });
+        }
+        
+        res.json({ success: true, message: 'Пользователь успешно удален' });
+    } catch (error) {
+        res.status(500).json({ message: 'Ошибка при удалении' });
+    }
 });
