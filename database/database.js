@@ -33,7 +33,6 @@ const userSchema = new mongoose.Schema({
     notes: { type: String, default: '' },     // Примечания (Примітки)
     createdAt: { type: Date, default: Date.now }
 });
-// ___________________________________________
 
 
 const User = mongoose.model('User', userSchema);
@@ -151,121 +150,7 @@ app.post('/api/attendance/scan', async (req, res) => {
     }
 });
 
-// --- МАРШРУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ В EXCEL ---
-// app.get('/api/attendance/download-excel', async (req, res) => {
-//     try {
-//         // Получаем месяц и год из строки запроса (например, ?year=2026&month=6) или берем текущие
-//         const year = parseInt(req.query.year) || new Date().getFullYear();
-//         const month = parseInt(req.query.month) || (new Date().getMonth() + 1); 
-//         const daysInMonth = new Date(year, month, 0).getDate(); 
 
-//         const workbook = new ExcelJS.Workbook();
-//         const sheet = workbook.addWorksheet(`AT-${month}`);
-//         sheet.views = [{ showGridLines: true }];
-
-//         // 1. Создаем шапку таблицы
-//         sheet.mergeCells('A1:C1');
-//         sheet.getCell('A1').value = `Табель робочого часу - Місяць ${month}.${year}`;
-//         sheet.getCell('A1').font = { name: 'Times New Roman', size: 12, bold: true };
-
-//         sheet.getRow(3).values = [
-//             '№', 'ПІБ', 'Посада', 
-//             ...Array.from({ length: daysInMonth }, (_, i) => i + 1), 
-//             'Борг', 'Днів', 'Днів 2', 'Тариф 1', 'Тариф 2', 'Додано', 'Утримано', 'Сума', 'Примітки'
-//         ];
-
-//         // 2. Стилизуем ячейки с датами (желтый цвет как на скриншоте)
-//         for (let col = 4; col <= 3 + daysInMonth; col++) {
-//             const cell = sheet.getCell(3, col);
-//             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC000' } };
-//             cell.font = { bold: true };
-//             cell.alignment = { horizontal: 'center' };
-//         }
-
-//         // 3. Получаем всех пользователей и все посещения
-//         const users = await User.find().sort({ name: 1 });
-//         const visits = await Visit.find();
-
-//               // 4. Заполняем строки данными сотрудников
-//         users.forEach((user, index) => {
-//             const rowIndex = 4 + index; 
-//             const row = sheet.getRow(rowIndex);
-
-//             row.getCell(1).value = index + 1;
-//             row.getCell(2).value = user.name || 'Без имени';
-//             row.getCell(3).value = user.job || 'Рабочий';
-
-//             let workedDaysCount = 0;
-            
-//             // Проверяем явки на каждый день месяца
-//             for (let day = 1; day <= daysInMonth; day++) {
-//                 const colIndex = 3 + day;
-//                 const currentDayStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                
-//                 const hasScan = visits.some(visit => 
-//                     visit.userId && visit.userId.toString() === user._id.toString() && 
-//                     visit.dateString === currentDayStr
-//                 );
-
-//                 if (hasScan) {
-//                     row.getCell(colIndex).value = 8; // Ставим 8, если был скан
-//                     workedDaysCount++;
-//                 } else {
-//                     // 🌟 Теперь здесь может быть пусто '', или ты можешь руками вписать 'В' в скачанном файле
-//                     row.getCell(colIndex).value = ''; 
-//                 }
-//             }
-//             // Индексы финальных колонок после дат
-//             const colBorg = 4 + daysInMonth;
-//             const colDniv = colBorg + 1; // 🌟 Колонка "Днів", где число явок уже посчитано сервером
-//             const colDniv2 = colBorg + 2;
-//             const colTarif1 = colBorg + 3; // 🌟 Колонка "Тариф 1"
-//             const colTarif2 = colBorg + 4;
-//             const colDodano = colBorg + 5; // 🌟 Колонка "Додано"
-//             const colUtrimano = colBorg + 6; // 🌟 Колонка "Утримано"
-//             const colSuma = colBorg + 7;   // 🌟 Колонка "Сума"
-//             const colPrim = colBorg + 8;
-
-//             row.getCell(colBorg).value = user.debt || 0;
-//             row.getCell(colDniv).value = workedDaysCount; // Сюда бэкенд записывает чистое число (например, 15)
-//             row.getCell(colDniv2).value = 0; 
-//             row.getCell(colTarif1).value = user.tariff || 0;
-//             row.getCell(colTarif2).value = 0; 
-//             row.getCell(colDodano).value = user.bonuses || 0;
-//             row.getCell(colUtrimano).value = user.penalties || 0; 
-
-//             // Получаем точные адреса ячеек для текущей строки (например, AJ4, AL4 и т.д.)
-//             const dnivAddress = sheet.getCell(rowIndex, colDniv).address;
-//             const tarifAddress = sheet.getCell(rowIndex, colTarif1).address;
-//             const dodanoAddress = sheet.getCell(rowIndex, colDodano).address;
-//             const utrimanoAddress = sheet.getCell(rowIndex, colUtrimano).address;
-
-//             // 🌟 ЖЕЛЕЗНАЯ ФОРМУЛА: Число Дней * Тариф + Добавлено - Удержано
-//             // Больше никакой зависимости от букв "В" в календаре!
-//             row.getCell(colSuma).value = {
-//                 formula: `=${dnivAddress}*${tarifAddress}+${dodanoAddress}-${utrimanoAddress}`
-//             };
-
-//             row.getCell(colPrim).value = user.notes || '';
-//             row.font = { name: 'Times New Roman', size: 10 };
-//         });
-
-
-//         sheet.getColumn(2).width = 35; // Автоширина для ФИО
-//         sheet.getColumn(3).width = 15; // Автоширина для должностей
-
-//         // 5. Настройка заголовков для скачивания файла браузером
-//         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-//         res.setHeader('Content-Disposition', `attachment; filename=Tabel_${month}_${year}.xlsx`);
-
-//         await workbook.xlsx.write(res);
-//         res.end();
-
-//     } catch (error) {
-//         console.error('Ошибка генерации Excel:', error);
-//         res.status(500).send('Ошибка сервера при создании Excel');
-//     }
-// });
 app.get('/api/attendance/download-excel', async (req, res) => {
     try {
         const year = parseInt(req.query.year) || new Date().getFullYear();
