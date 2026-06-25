@@ -550,7 +550,7 @@ app.listen(PORT, () => {
 // --- ИСПРАВЛЕННЫЙ РОУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ ОБЪЕКТА ---
 app.get('/api/attendance/download-excel', async (req, res) => {
     try {
-        // 1. ОБЪЯВЛЯЕМ ПЕРЕМЕННЫЕ В САМОМ ВЕРХУ (Исправление ошибки year is not defined!)
+        // 🌟 1. СНАЧАЛА объявляем и считываем параметры из запроса
         const year = parseInt(req.query.year) || new Date().getFullYear();
         const month = parseInt(req.query.month) || (new Date().getMonth() + 1); 
         const objectName = req.query.objectName; 
@@ -559,7 +559,7 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             return res.status(400).send('Помилка: Не вказано назву об\'єкта (?objectName=...)');
         }
 
-        // 2. Теперь, когда year и month гарантированно созданы, настраиваем даты
+        // 🌟 2. ТОЛЬКО ПОСЛЕ ЭТОГО настраиваем даты (теперь year и month гарантированно созданы!)
         const daysInMonth = new Date(year, month, 0).getDate(); 
         const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
         const nextMonth = month === 12 ? 1 : month + 1;
@@ -570,6 +570,9 @@ app.get('/api/attendance/download-excel', async (req, res) => {
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet(`AT-${month}`);
         sheet.views = [{ showGridLines: true }];
+
+        // --- ДАЛЬШЕ ИДЕТ ОСТАЛЬНОЙ НАШ РАБОЧИЙ КОД НАСТРОЙКИ СЕТКИ, ШАПКИ И ЦИКЛОВ ---
+
 
         // --- НАСТРОЙКА ШИРИНЫ КОЛОНОК ---
         sheet.getColumn(1).width = 4;   
