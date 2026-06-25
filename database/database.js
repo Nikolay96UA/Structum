@@ -49,6 +49,40 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
+// --- РОУТ РЕГИСТРАЦИИ НОВОГО БРИГАДИРА ---
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { login, password, objectName } = req.body;
+
+        // 1. Проверяем, заполнены ли все поля
+        if (!login || !password || !objectName) {
+            return res.status(400).json({ success: false, message: 'Заповніть всі поля!' });
+        }
+
+        // 2. Проверяем, нет ли уже пользователя с таким логином
+        const existingAccount = await Account.findOne({ login });
+        if (existingAccount) {
+            return res.status(400).json({ success: false, message: 'Такий логін вже зайнятий!' });
+        }
+
+        // 3. Создаем и сохраняем новый аккаунт
+        const newAccount = new Account({
+            login,
+            password, // Для простоты пока обычной строкой
+            role: 'brigadier',
+            objectName
+        });
+
+        await newAccount.save();
+
+        res.status(201).json({ success: true, message: 'Акаунт успішно створено!' });
+    } catch (error) {
+        console.error('Помилка при реєстрації:', error);
+        res.status(500).json({ message: 'Помилка сервера при реєстрації' });
+    }
+});
+
+
 // 5. Авторизация бригадира и получение привязанного объекта
 app.post('/api/auth/login', async (req, res) => {
     try {

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STRUCTUM — Реєстрація</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+        body {
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .register-container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+        .logo {
+            font-weight: bold;
+            font-size: 24px;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.2s;
+            background-color: white;
+        }
+        input:focus, select:focus {
+            border-color: #28a745;
+        }
+        /* Анимация плавного появления для нового поля */
+        #customObjectGroup {
+            display: none;
+            margin-top: 15px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+        }
+        .btn-register {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        .btn-register:hover {
+            background-color: #0069d9;
+        }
+        .login-link {
+            display: block;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .login-link:hover {
+            text-decoration: underline;
+        }
+        #message {
+            font-size: 14px;
+            margin-top: 15px;
+            display: none;
+        }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+    </style>
+</head>
+<body>
+
+<div class="register-container">
+    <div class="logo">STRUCTUM</div>
+    <div class="subtitle">Створення акаунту бригадира</div>
+
+    <form id="registerForm">
+        <div class="form-group">
+            <label for="login">Новий логін</label>
+            <input type="text" id="login" required placeholder="Придумайте логін">
+        </div>
+        <div class="form-group">
+            <label for="password">Пароль</label>
+            <input type="password" id="password" required placeholder="Придумайте пароль">
+        </div>
+        <div class="form-group">
+            <label for="objectName">Будівельний об'єкт</label>
+            <select id="objectName" required>
+                <option value="" disabled selected>Оберіть об'єкт зі списку</option>
+                <option value="ПС 330 Чернігівська">ПС 330 Чернігівська</option>
+                <option value="Дніпровська Будова">Дніпровська Будова</option>
+                <option value="Київська Філія">Київська Філія</option>
+                <option value="new_object_option">➕ Додати новий об'єкт...</option>
+            </select>
+
+            <!-- Скрытое поле для ввода нового объекта вручную -->
+            <div id="customObjectGroup">
+                <label for="customObjectName">Назва нового об'єкта</label>
+                <input type="text" id="customObjectName" placeholder="Наприклад: ПС 750 Київська">
+            </div>
+        </div>
+        <button type="submit" class="btn-register">ЗАРЕЄСТРУВАТИСЯ</button>
+    </form>
+
+    <div id="message"></div>
+    <a href="login.html" class="login-link">Вже є акаунт? Увійти</a>
+</div>
+
+<script>
+    const objectSelect = document.getElementById('objectName');
+    const customObjectGroup = document.getElementById('customObjectGroup');
+    const customObjectInput = document.getElementById('customObjectName');
+
+    // Следим за выбором в выпадающем списке
+    objectSelect.addEventListener('change', function() {
+        if (this.value === 'new_object_option') {
+            customObjectGroup.style.display = 'block';
+            customObjectInput.required = true;
+            customObjectInput.focus();
+        } else {
+            customObjectGroup.style.display = 'none';
+            customObjectInput.required = false;
+            customObjectInput.value = '';
+        }
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const loginInput = document.getElementById('login').value.trim();
+        const passwordInput = document.getElementById('password').value.trim();
+        const messageDiv = document.getElementById('message');
+
+        // Определяем, какое имя объекта отправлять
+        let finalObjectName = objectSelect.value;
+        if (finalObjectName === 'new_object_option') {
+            finalObjectName = customObjectInput.value.trim();
+        }
+
+        if (!finalObjectName) {
+            messageDiv.textContent = 'Будь ласка, оберіть або введіть об\'єкт';
+            messageDiv.className = 'error';
+            messageDiv.style.display = 'block';
+            return;
+        }
+
+        messageDiv.style.display = 'none';
+        messageDiv.className = '';
+
+        try {
+            // Замени на 'https://onrender.com' при деплое на Render
+            const response = await fetch('http://localhost:3000/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    login: loginInput, 
+                    password: passwordInput, 
+                    objectName: finalObjectName 
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                messageDiv.textContent = data.message;
+                messageDiv.className = 'success';
+                messageDiv.style.display = 'block';
+                
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } else {
+                messageDiv.textContent = data.message || 'Помилка реєстрації';
+                messageDiv.className = 'error';
+                messageDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error(error);
+            messageDiv.textContent = 'Помилка підключення до сервера';
+            messageDiv.className = 'error';
+            messageDiv.style.display = 'block';
+        }
+    });
+</script>
+
+</body>
+</html>
