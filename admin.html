@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STRUCTUM — Панель Адміністратора</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
+        body { background-color: #f4f6f9; padding: 30px; }
+        header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .logo h1 { font-size: 24px; letter-spacing: 2px; color: #333; }
+        .logo p { font-size: 12px; color: #777; text-transform: uppercase; }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        .title { font-size: 20px; color: #444; margin-bottom: 20px; font-weight: bold; }
+        
+        /* Сетка для карточек объектов */
+        .objects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .object-card { background: white; border-radius: 8px; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 5px solid #28a745; display: flex; flex-direction: column; justify-content: space-between; }
+        .object-name { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 15px; }
+        
+        .btn-download { display: block; text-align: center; background-color: #28a745; color: white; padding: 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 14px; transition: background 0.2s; }
+        .btn-download:hover { background-color: #218838; }
+        #loading { font-size: 16px; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo">
+            <h1>STRUCTUM</h1>
+            <p>облік персоналу • Адмін-панель</p>
+        </div>
+        <a href="login.html" style="color: #dc3545; font-weight: bold; text-decoration: none;">Вийти</a>
+    </header>
+
+    <div class="title">📋 Доступні табелі будівельних об'єктів</div>
+    
+    <div id="loading">Завантаження списку об'єктів...</div>
+    <div class="objects-grid" id="objectsGrid"></div>
+</div>
+
+<script>
+    async function loadObjects() {
+        const grid = document.getElementById('objectsGrid');
+        const loadingText = document.getElementById('loading');
+        
+        try {
+            // Замените на 'https://onrender.com' при деплое на Render
+            const response = await fetch('http://localhost:3000/api/objects');
+            const data = await response.json();
+            
+            loadingText.style.display = 'none';
+            grid.innerHTML = '';
+            
+            if(data.success && data.objects.length > 0) {
+                data.objects.forEach(objectName => {
+                    // Создаем динамическую карточку для каждого строительного объекта
+                    const card = document.createElement('div');
+                    card.className = 'object-card';
+                    
+                    // Формируем правильную ссылку на скачивание с query-параметром имени объекта
+                    // Для Render замените на: https://onrender.com...
+                    const downloadUrl = `http://localhost:3000/api/attendance/download-excel?objectName=${encodeURIComponent(objectName)}`;
+                    
+                    card.innerHTML = `
+                        <div class="object-name">🏗️ ${objectName}</div>
+                        <a href="${downloadUrl}" class="btn-download">📊 Скачати табель Excel</a>
+                    `;
+                    grid.appendChild(card);
+                });
+            } else {
+                grid.innerHTML = '<p style="color: #999;">Наразі немає створених об\'єктів або активних табелів.</p>';
+            }
+        } catch (error) {
+            console.error(error);
+            loadingText.textContent = 'Помилка завантаження даних із сервера бэкенда.';
+        }
+    }
+
+    // Запускаем загрузку при открытии страницы
+    loadObjects();
+</script>
+
+</body>
+</html>

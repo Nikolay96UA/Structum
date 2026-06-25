@@ -766,6 +766,24 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// --- РОУТ ДЛЯ ПОЛУЧЕНИЯ ВСЕХ УНИКАЛЬНЫХ ОБЪЕКТОВ ---
+app.get('/api/objects', async (req, res) => {
+    try {
+        // Собираем уникальные объекты из аккаунтов бригадиров
+        const objectsFromAccounts = await Account.distinct('objectName');
+        // Собираем уникальные объекты из фактических посещений (на всякий случай)
+        const objectsFromVisits = await Visit.distinct('objectName');
+
+        // Объединяем оба списка и убираем дубликаты/пустые строки
+        const allObjects = [...new Set([...objectsFromAccounts, ...objectsFromVisits])].filter(Boolean);
+
+        res.json({ success: true, objects: allObjects.sort() });
+    } catch (error) {
+        console.error('Помилка при отриманні об\'єктів:', error);
+        res.status(500).json({ message: 'Помилка сервера при отриманні списку об\'єктів' });
+    }
+});
+
 
 // --- ЗАПУСК СЕРВЕРА (Всегда самый конец файла) ---
 app.listen(PORT, () => {
