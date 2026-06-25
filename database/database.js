@@ -546,11 +546,11 @@ app.listen(PORT, () => {
             }
         });
 // _____________________
-// --- АВТОРСКИЙ РОУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ ОБЪЕКТА (ТОЛЬКО С ТЕМИ КТО РАБОТАЛ) ---
-// --- ЖЕЛЕЗНЫЙ РОУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ ОБЪЕКТА (СТРОГО ДЛЯ ТЕХ КТО ПОСЕЩАЛ) ---
+
+// --- ИСПРАВЛЕННЫЙ РОУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ ОБЪЕКТА ---
 app.get('/api/attendance/download-excel', async (req, res) => {
     try {
-        // 🌟 1. ПЕРВЫМ ДЕЛОМ получаем параметры из запроса, чтобы они были доступны во всем коде ниже!
+        // 1. ОБЪЯВЛЯЕМ ПЕРЕМЕННЫЕ В САМОМ ВЕРХУ (Исправление ошибки year is not defined!)
         const year = parseInt(req.query.year) || new Date().getFullYear();
         const month = parseInt(req.query.month) || (new Date().getMonth() + 1); 
         const objectName = req.query.objectName; 
@@ -559,14 +559,14 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             return res.status(400).send('Помилка: Не вказано назву об\'єкта (?objectName=...)');
         }
 
-        // 🌟 2. Теперь, когда year и month созданы, настраиваем даты и количество дней
+        // 2. Теперь, когда year и month гарантированно созданы, настраиваем даты
         const daysInMonth = new Date(year, month, 0).getDate(); 
         const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
         const nextMonth = month === 12 ? 1 : month + 1;
         const nextYear = month === 12 ? year + 1 : year;
         const endDateStr = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
 
-        // 🌟 3. Создаем книгу Excel и настраиваем сетку
+        // 3. Создаем саму Excel-книгу
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet(`AT-${month}`);
         sheet.views = [{ showGridLines: true }];
@@ -641,14 +641,13 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             }
         }
 
-        // --- ФИЛЬТРАЦИЯ И ПОИСК СОТРУДНИКОВ ОБЪЕКТА ---
-        // Извлекаем уникальные ID сотрудников, которые сканировались на этом объекте в отчетном месяце
+        // --- ФИЛЬТРАЦИЯ СОТРУДНИКОВ ОБЪЕКТА ---
         const activeUserIds = await Visit.distinct('userId', {
             objectName: objectName,
             dateString: { $gte: startDateStr, $lt: endDateStr }
         });
 
-        // Если за месяц на объекте никто не отметился, отдаем пустой красивый табель с шапкой
+        // Если никто не отметился, отдаем пустой табель с шапкой
         if (!activeUserIds || activeUserIds.length === 0) {
             res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             res.setHeader('Content-Disposition', `attachment; filename=Tabel_Empty_${month}_${year}.xlsx`);
@@ -656,10 +655,8 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             return res.end();
         }
 
-        // Загружаем карточки ТОЛЬКО активных сотрудников
         const usersOnObject = await User.find({ _id: { $in: activeUserIds } }).sort({ name: 1 });
 
-        // Подгружаем логи посещений для расстановки "8-ок"
         const objectVisits = await Visit.find({
             objectName: objectName,
             dateString: { $gte: startDateStr, $lt: endDateStr }
@@ -751,6 +748,7 @@ app.get('/api/attendance/download-excel', async (req, res) => {
         res.status(500).send('Помилка сервера при створенні Excel');
     }
 });
+
 
 
 // ______________________
