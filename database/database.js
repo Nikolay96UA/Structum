@@ -406,8 +406,7 @@ app.get('/api/attendance/download-excel', async (req, res) => {
         row3.height = 20;
         row3.values = [
             '№', 'ПІБ', 'Посада', 
-            ...Array.from({ length: daysInMonth }, (_, i) => i + 1), 
-            'Борг', 'Днів', 'Днів 2', 'Тариф1', 'Тариф 2', 'Додано', 'Утримано', 'Сума', 'Примітки'
+            ...Array.from({ length: daysInMonth }, (_, i) => i + 1), 'Днів', 'Днів 2', 'Тариф1', 'Тариф 2', 'Додано', 'Утримано', 'Сума', 'Примітки'
         ];
 
         for (let col = 1; col <= startFinanceCol + 8; col++) {
