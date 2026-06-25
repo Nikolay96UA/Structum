@@ -8,6 +8,9 @@
 <body>
     <header>
         <a href="./index.html"><p>STRUCTUM</p><p>облік персоналу</p></a>
+        <button id="logoutBtn" style="padding: 8px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+        Вийти з акаунту
+    </button>
     </header>
 
         <ul>
@@ -20,6 +23,22 @@
             <li><a href="generatorQr.html">генератор</a></li>
         </ul>
 
+        <script>    // 🌟 ЛОГИКА ВЫХОДА ИЗ СИСТЕМЫ
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        // Полностью очищаем данные сессии текущего бригадира
+        localStorage.removeItem('objectName');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userLogin');
+
+        // Перенаправляем на страницу авторизации
+        window.location.href = 'login.html';
+    });
+
+    // 🌟 ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА: Если неавторизованный пользователь зашел на index.html в обход логина
+    if (!localStorage.getItem('objectName')) {
+        window.location.href = 'login.html';
+    }
+</script>
 
 </body>
 </html>
