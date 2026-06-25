@@ -49,6 +49,32 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
+// 5. Авторизация бригадира и получение привязанного объекта
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { login, password } = req.body;
+
+        // Ищем аккаунт в базе MongoDB по логину и паролю
+        const account = await Account.findOne({ login, password });
+
+        if (!account) {
+            return res.status(401).json({ success: false, message: 'Неверный логин или пароль!' });
+        }
+
+        // Если нашли, отправляем данные обратно на фронтенд
+        res.json({
+            success: true,
+            login: account.login,
+            role: account.role,
+            objectName: account.objectName // Этот объект запишется в localStorage сканера
+        });
+    } catch (error) {
+        console.error('Ошибка при авторизации:', error);
+        res.status(500).json({ message: 'Ошибка сервера при проверке аккаунта' });
+    }
+});
+
+
 // 2. Добавить нового пользователя в базу
 app.post('/api/users', async (req, res) => {
     try {
@@ -107,43 +133,150 @@ app.post('/api/tabel/upload', upload.single('excelFile'), async (req, res) => { 
 });
 
 // --- СХЕМА ДЛЯ ПОСЕЩЕНИЙ ---
+// const visitSchema = new mongoose.Schema({
+//     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Ссылка на сотрудника
+//     dateString: String, // Дата в текстовом формате "2026-06-24" для легкого поиска
+//     scannedAt: { type: Date, default: Date.now }
+// });
+
+// --- СХЕМА ДЛЯ ПОСЕЩЕНИЙ С УЧЕТОМ ОБЪЕКТОВ ---
 const visitSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Ссылка на сотрудника
-    dateString: String, // Дата в текстовом формате "2026-06-24" для легкого поиска
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
+    dateString: String, 
+    objectName: String, // 🌟 Добавили поле для названия строительного объекта
     scannedAt: { type: Date, default: Date.now }
 });
 
+// --- СХЕМА АККАУНТОВ ДЛЯ ВХОДА НА САЙТ ---
+// const accountSchema = new mongoose.Schema({
+//     login: { type: String, required: true, unique: true },
+//     password: { type: String, required: true }, // Для простоты пока храним строкой, либо потом сделаем хэш
+//     role: { type: String, default: 'brigadier' }, // 'admin' или 'brigadier'
+//     objectName: { type: String, default: '' } // 🌟 Сюда пишем объект (например: "ПС 330 Чернігівська")
+// });
+
+// const Account = mongoose.model('Account', accountSchema);
+
+// --- СХЕМА ДЛЯ АККАУНТОВ ПОЛЬЗОВАТЕЛЕЙ СИСТЕМЫ ---
+const accountSchema = new mongoose.Schema({
+    login: { type: String, required: true, unique: true },
+    password: { type: String, required: true }, // Пароль (в целях простоты пока обычной строкой)
+    role: { type: String, default: 'brigadier' }, // Роль: 'brigadier' или 'admin'
+    objectName: { type: String, default: '' }, // Строительный объект (например: "ПС 330 Чернігівська")
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Account = mongoose.model('Account', accountSchema);
+
+
+// --- РОУТ АВТОРИЗАЦИИ ---
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { login, password } = req.body;
+
+        const account = await Account.findOne({ login, password });
+        if (!account) {
+            return res.status(401).json({ success: false, message: 'Неверный логин или пароль' });
+        }
+
+        // Возвращаем роль и привязанный объект
+        res.json({
+            success: true,
+            role: account.role,
+            objectName: account.objectName,
+            login: account.login
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Ошибка сервера при авторизации' });
+    }
+});
+
+
+
 const Visit = mongoose.model('Visit', visitSchema);
 // --- МАРШРУТ ДЛЯ СКАНИРОВАНИЯ QR-КОДА ---
+// app.post('/api/attendance/scan', async (req, res) => {
+//     try {
+//         const { userId } = req.body;
+
+//         // 1. Проверяем валидность формата ID, чтобы сервер не падал от левых QR-кодов
+//         if (!mongoose.Types.ObjectId.isValid(userId)) {
+//             return res.status(400).json({ message: 'Некорректный формат QR-кода' });
+//         }
+
+//         // 2. Проверяем наличие пользователя в базе
+//         const user = await User.findById(userId);
+//         if (!user) {
+//             return res.status(404).json({ message: 'Сотрудник не найден в системе' });
+//         }
+
+//         // 3. Получаем сегодняшнюю дату (ГГГГ-ММ-ДД)
+//         const todayStr = new Date().toISOString().split('T')[0];
+
+//         // 4. Проверяем дубликаты сканирования за сегодня
+//         const alreadyScanned = await Visit.findOne({ userId, dateString: todayStr });
+//         if (alreadyScanned) {
+//             return res.status(400).json({ message: `${user.name} уже отмечен сегодня!` });
+//         }
+
+//         // 5. Записываем приход на работу
+//         const newVisit = new Visit({ userId, dateString: todayStr });
+//         await newVisit.save();
+
+//         res.json({ success: true, message: `Отмечено: ${user.name} (${user.job})`, userName: user.name });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: 'Ошибка сервера при фиксации времени' });
+//     }
+// });
+
+// --- МАРШРУТ ДЛЯ СКАНИРОВАНИЯ QR-КОДА С БЛОКИРОВКОЙ ДРУГИХ ОБЪЕКТОВ ---
 app.post('/api/attendance/scan', async (req, res) => {
     try {
-        const { userId } = req.body;
+        const { userId, objectName } = req.body; 
 
-        // 1. Проверяем валидность формата ID, чтобы сервер не падал от левых QR-кодов
+        if (!objectName) {
+            return res.status(400).json({ message: 'Не указан строительный объект' });
+        }
+
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ message: 'Некорректный формат QR-кода' });
         }
 
-        // 2. Проверяем наличие пользователя в базе
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'Сотрудник не найден в системе' });
         }
 
-        // 3. Получаем сегодняшнюю дату (ГГГГ-ММ-ДД)
         const todayStr = new Date().toISOString().split('T')[0];
 
-        // 4. Проверяем дубликаты сканирования за сегодня
-        const alreadyScanned = await Visit.findOne({ userId, dateString: todayStr });
-        if (alreadyScanned) {
-            return res.status(400).json({ message: `${user.name} уже отмечен сегодня!` });
+        // 🌟 ИСПРАВЛЕННАЯ ПРОВЕРКА: Ищем ЛЮБУЮ отметку сотрудника за сегодня на ЛЮБОМ объекте
+        const existingVisit = await Visit.findOne({ userId, dateString: todayStr });
+        
+        if (existingVisit) {
+            // Если он уже отметился именно на ЭТОМ объекте
+            if (existingVisit.objectName === objectName) {
+                return res.status(400).json({ 
+                    message: `⚠ ${user.name} уже отмечен на вашем объекте сегодня!` 
+                });
+            } else {
+                // 🌟 БЛОКИРОВКА: Если он отметился на ДРУГОМ объекте
+                return res.status(400).json({ 
+                    message: `❌ Ошибка! ${user.name} сегодня уже был отмечен на объекте: "${existingVisit.objectName}"` 
+                });
+            }
         }
 
-        // 5. Записываем приход на работу
-        const newVisit = new Visit({ userId, dateString: todayStr });
+        // Если за сегодня отметок нет вообще — создаем новую запись с привязкой к текущему объекту
+        const newVisit = new Visit({ userId, dateString: todayStr, objectName });
         await newVisit.save();
 
-        res.json({ success: true, message: `Отмечено: ${user.name} (${user.job})`, userName: user.name });
+        res.json({ 
+            success: true, 
+            message: `✅ Отмечено на ${objectName}: ${user.name} (${user.job})`, 
+            userName: user.name 
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Ошибка сервера при фиксации времени' });
@@ -334,6 +467,33 @@ app.get('/api/attendance/download-excel', async (req, res) => {
     } catch (error) {
         console.error('Ошибка генерации красивого Excel:', error);
         res.status(500).send('Ошибка сервера при создании Excel');
+    }
+});
+
+// --- РОУТ АВТОРИЗАЦИИ ДЛЯ БРИГАДИРОВ И АДМИНОВ ---
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { login, password } = req.body;
+
+        // Ищем аккаунт в коллекции (для простоты пароль пока проверяем строкой)
+        // Если у тебя еще нет модели Account, мы пропишем её создание прямо перед роутом
+        const Account = mongoose.model('Account');
+        const account = await Account.findOne({ login, password });
+
+        if (!account) {
+            return res.status(401).json({ success: false, message: 'Неверный логин или пароль' });
+        }
+
+        // Если всё верно, отдаем данные аккаунта и объект
+        res.json({
+            success: true,
+            role: account.role,
+            objectName: account.objectName,
+            login: account.login
+        });
+    } catch (error) {
+        console.error('Ошибка авторизации:', error);
+        res.status(500).json({ message: 'Ошибка сервера при авторизации' });
     }
 });
 
