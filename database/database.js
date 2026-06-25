@@ -549,6 +549,7 @@ app.listen(PORT, () => {
 // --- АВТОРСКИЙ РОУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ ОБЪЕКТА (ТОЛЬКО С ТЕМИ КТО РАБОТАЛ) ---
 app.get('/api/attendance/download-excel', async (req, res) => {
     try {
+        // 1. СНАЧАЛА объявляем переменные из параметров запроса
         const year = parseInt(req.query.year) || new Date().getFullYear();
         const month = parseInt(req.query.month) || (new Date().getMonth() + 1); 
         const objectName = req.query.objectName; 
@@ -557,10 +558,20 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             return res.status(400).send('Помилка: Не вказано назву об\'єкта (?objectName=...)');
         }
 
+        // 2. ТОЛЬКО ПОСЛЕ ЭТОГО формируем даты (теперь year и month определены!)
         const daysInMonth = new Date(year, month, 0).getDate(); 
+        const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
+        const nextMonth = month === 12 ? 1 : month + 1;
+        const nextYear = month === 12 ? year + 1 : year;
+        const endDateStr = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+
+        // 3. Создаем книгу Excel
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet(`AT-${month}`);
         sheet.views = [{ showGridLines: true }];
+
+        // --- ДАЛЕЕ ИДЕТ ОСТАЛЬНОЙ НАШ РАБОЧИЙ КОД НАСТРОЙКИ СЕТКИ, ШАПКИ И ЦИКЛОВ ---
+
 
         // --- НАСТРОЙКА ШИРИНЫ КОЛОНОК ---
         sheet.getColumn(1).width = 4;   
