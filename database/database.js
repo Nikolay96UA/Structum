@@ -547,9 +547,10 @@ app.listen(PORT, () => {
         });
 // _____________________
 // --- АВТОРСКИЙ РОУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ ОБЪЕКТА (ТОЛЬКО С ТЕМИ КТО РАБОТАЛ) ---
+// --- ЖЕЛЕЗНЫЙ РОУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ ОБЪЕКТА (СТРОГО ДЛЯ ТЕХ КТО ПОСЕЩАЛ) ---
 app.get('/api/attendance/download-excel', async (req, res) => {
     try {
-        // 1. СНАЧАЛА объявляем переменные из параметров запроса
+        // 🌟 1. ПЕРВЫМ ДЕЛОМ получаем параметры из запроса, чтобы они были доступны во всем коде ниже!
         const year = parseInt(req.query.year) || new Date().getFullYear();
         const month = parseInt(req.query.month) || (new Date().getMonth() + 1); 
         const objectName = req.query.objectName; 
@@ -558,20 +559,17 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             return res.status(400).send('Помилка: Не вказано назву об\'єкта (?objectName=...)');
         }
 
-        // 2. ТОЛЬКО ПОСЛЕ ЭТОГО формируем даты (теперь year и month определены!)
+        // 🌟 2. Теперь, когда year и month созданы, настраиваем даты и количество дней
         const daysInMonth = new Date(year, month, 0).getDate(); 
         const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
         const nextMonth = month === 12 ? 1 : month + 1;
         const nextYear = month === 12 ? year + 1 : year;
         const endDateStr = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
 
-        // 3. Создаем книгу Excel
+        // 🌟 3. Создаем книгу Excel и настраиваем сетку
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet(`AT-${month}`);
         sheet.views = [{ showGridLines: true }];
-
-        // --- ДАЛЕЕ ИДЕТ ОСТАЛЬНОЙ НАШ РАБОЧИЙ КОД НАСТРОЙКИ СЕТКИ, ШАПКИ И ЦИКЛОВ ---
-
 
         // --- НАСТРОЙКА ШИРИНЫ КОЛОНОК ---
         sheet.getColumn(1).width = 4;   
@@ -643,25 +641,31 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             }
         }
 
-        // --- 🌟 НАЧАЛО ФИЛЬТРАЦИИ И ПОИСКА СОТРУДНИКОВ ОБЪЕКТА 🌟 ---
-        const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
-        const nextMonth = month === 12 ? 1 : month + 1;
-        const nextYear = month === 12 ? year + 1 : year;
-        const endDateStr = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+        // --- ФИЛЬТРАЦИЯ И ПОИСК СОТРУДНИКОВ ОБЪЕКТА ---
+        // Извлекаем уникальные ID сотрудников, которые сканировались на этом объекте в отчетном месяце
+        const activeUserIds = await Visit.distinct('userId', {
+            objectName: objectName,
+            dateString: { $gte: startDateStr, $lt: endDateStr }
+        });
 
-        // Шаг А. Ищем только визиты этого объекта за месяц
+        // Если за месяц на объекте никто не отметился, отдаем пустой красивый табель с шапкой
+        if (!activeUserIds || activeUserIds.length === 0) {
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename=Tabel_Empty_${month}_${year}.xlsx`);
+            await workbook.xlsx.write(res);
+            return res.end();
+        }
+
+        // Загружаем карточки ТОЛЬКО активных сотрудников
+        const usersOnObject = await User.find({ _id: { $in: activeUserIds } }).sort({ name: 1 });
+
+        // Подгружаем логи посещений для расстановки "8-ок"
         const objectVisits = await Visit.find({
             objectName: objectName,
             dateString: { $gte: startDateStr, $lt: endDateStr }
         });
 
-        // Шаг Б. Вытаскиваем массив уникальных строк-ID сотрудников, убирая пустые
-        const uniqueUserIds = [...new Set(objectVisits.map(v => v.userId ? v.userId.toString() : null))].filter(Boolean);
-
-        // Шаг В. Загружаем из базы только тех людей, чьи ID попали в отметки объекта
-        const usersOnObject = await User.find({ _id: { $in: uniqueUserIds } }).sort({ name: 1 });
-
-        // --- ЗАПОЛНЕНИЕ СТРОК ДАННЫМИ ДЛЯ НАЙДЕННЫХ СОТРУДНИКОВ ---
+        // --- ЗАПОЛНЕНИЕ СТРОК ДАННЫМИ ---
         usersOnObject.forEach((user, index) => {
             const rowIndex = 4 + index; 
             const row = sheet.getRow(rowIndex);
@@ -747,6 +751,7 @@ app.get('/api/attendance/download-excel', async (req, res) => {
         res.status(500).send('Помилка сервера при створенні Excel');
     }
 });
+
 
 // ______________________
 
