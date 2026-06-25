@@ -548,9 +548,10 @@ app.listen(PORT, () => {
 // _____________________
 
 // --- ИСПРАВЛЕННЫЙ РОУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ ОБЪЕКТА ---
+// --- ИСПРАВЛЕННЫЙ РОУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ ОБЪЕКТА ---
 app.get('/api/attendance/download-excel', async (req, res) => {
     try {
-        // 🌟 1. СНАЧАЛА объявляем и считываем параметры из запроса
+        // 🌟 ШАГ 1: Объявление параметров в самом верху (Устраняет ReferenceError)
         const year = parseInt(req.query.year) || new Date().getFullYear();
         const month = parseInt(req.query.month) || (new Date().getMonth() + 1); 
         const objectName = req.query.objectName; 
@@ -559,20 +560,16 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             return res.status(400).send('Помилка: Не вказано назву об\'єкта (?objectName=...)');
         }
 
-        // 🌟 2. ТОЛЬКО ПОСЛЕ ЭТОГО настраиваем даты (теперь year и month гарантированно созданы!)
+        // 🌟 ШАГ 2: Логика вычисления дат идет строго после объявления year и month
         const daysInMonth = new Date(year, month, 0).getDate(); 
         const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
         const nextMonth = month === 12 ? 1 : month + 1;
         const nextYear = month === 12 ? year + 1 : year;
         const endDateStr = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
 
-        // 3. Создаем саму Excel-книгу
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet(`AT-${month}`);
         sheet.views = [{ showGridLines: true }];
-
-        // --- ДАЛЬШЕ ИДЕТ ОСТАЛЬНОЙ НАШ РАБОЧИЙ КОД НАСТРОЙКИ СЕТКИ, ШАПКИ И ЦИКЛОВ ---
-
 
         // --- НАСТРОЙКА ШИРИНЫ КОЛОНОК ---
         sheet.getColumn(1).width = 4;   
@@ -644,13 +641,12 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             }
         }
 
-        // --- ФИЛЬТРАЦИЯ СОТРУДНИКОВ ОБЪЕКТА ---
+        // --- ФИЛЬТРАЦИЯ И ЗАПОЛНЕНИЕ ---
         const activeUserIds = await Visit.distinct('userId', {
             objectName: objectName,
             dateString: { $gte: startDateStr, $lt: endDateStr }
         });
 
-        // Если никто не отметился, отдаем пустой табель с шапкой
         if (!activeUserIds || activeUserIds.length === 0) {
             res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             res.setHeader('Content-Disposition', `attachment; filename=Tabel_Empty_${month}_${year}.xlsx`);
@@ -659,13 +655,11 @@ app.get('/api/attendance/download-excel', async (req, res) => {
         }
 
         const usersOnObject = await User.find({ _id: { $in: activeUserIds } }).sort({ name: 1 });
-
         const objectVisits = await Visit.find({
             objectName: objectName,
             dateString: { $gte: startDateStr, $lt: endDateStr }
         });
 
-        // --- ЗАПОЛНЕНИЕ СТРОК ДАННЫМИ ---
         usersOnObject.forEach((user, index) => {
             const rowIndex = 4 + index; 
             const row = sheet.getRow(rowIndex);
@@ -751,6 +745,7 @@ app.get('/api/attendance/download-excel', async (req, res) => {
         res.status(500).send('Помилка сервера при створенні Excel');
     }
 });
+
 
 
 
