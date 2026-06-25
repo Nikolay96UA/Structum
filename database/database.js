@@ -235,111 +235,114 @@ app.post('/api/attendance/scan', async (req, res) => {
 
 
 
-        // --- ЗАМЕНЯЕМ СТАРЫЙ БЛОК ЗАГРУЗКИ ДАННЫХ И ЦИКЛА НА ЭТОТ ---
+        // // --- ЗАМЕНЯЕМ СТАРЫЙ БЛОК ЗАГРУЗКИ ДАННЫХ И ЦИКЛА НА ЭТОТ ---
 
-        // 1. Сначала берем ВСЕ посещения конкретно ДЛЯ ЭТОГО ОБЪЕКТА за выбранный месяц
-        const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
-        const nextMonth = month === 12 ? 1 : month + 1;
-        const nextYear = month === 12 ? year + 1 : year;
-        const endDateStr = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+        // // 1. Сначала берем ВСЕ посещения конкретно ДЛЯ ЭТОГО ОБЪЕКТА за выбранный месяц
+        // const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
+        // const nextMonth = month === 12 ? 1 : month + 1;
+        // const nextYear = month === 12 ? year + 1 : year;
+        // const endDateStr = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
 
-        // Загружаем только те визиты, которые относятся к этому объекту в отчетном месяце
-        const objectVisits = await Visit.find({
-            objectName: objectName,
-            dateString: { $gte: startDateStr, $lt: endDateStr }
-        });
+        // // Загружаем только те визиты, которые относятся к этому объекту в отчетном месяце
+        // const objectVisits = await Visit.find({
+        //     objectName: objectName,
+        //     dateString: { $gte: startDateStr, $lt: endDateStr }
+        // });
 
-        // 2. Вытаскиваем уникальные ID сотрудников, которые отметились на этом объекте хоть раз
-        const uniqueUserIds = [...new Set(objectVisits.map(v => v.userId ? v.userId.toString() : null))].filter(Boolean);
+        // // 2. Вытаскиваем уникальные ID сотрудников, которые отметились на этом объекте хоть раз
+        // const uniqueUserIds = [...new Set(objectVisits.map(v => v.userId ? v.userId.toString() : null))].filter(Boolean);
 
-        // 3. Загружаем из базы карточки ТОЛЬКО этих сотрудников (и сортируем по имени)
-        const users = await User.find({ _id: { $in: uniqueUserIds } }).sort({ name: 1 });
+        // // 3. Загружаем из базы карточки ТОЛЬКО этих сотрудников (и сортируем по имени)
+        // const users = await User.find({ _id: { $in: uniqueUserIds } }).sort({ name: 1 });
 
-        // 4. Заполняем строки данными сотрудников (теперь тут будут только нужные люди)
-        users.forEach((user, index) => {
-            const rowIndex = 4 + index; 
-            const row = sheet.getRow(rowIndex);
-            row.height = 18; // Высота строки
+        // // 4. Заполняем строки данными сотрудников (теперь тут будут только нужные люди)
+        // users.forEach((user, index) => {
+        //     const rowIndex = 4 + index; 
+        //     const row = sheet.getRow(rowIndex);
+        //     row.height = 18; // Высота строки
 
-            row.getCell(1).value = index + 1;
-            row.getCell(2).value = user.name || 'Без імені';
-            row.getCell(3).value = user.job || 'Робітник';
+        //     row.getCell(1).value = index + 1;
+        //     row.getCell(2).value = user.name || 'Без імені';
+        //     row.getCell(3).value = user.job || 'Робітник';
 
-            let workedDaysCount = 0;
+        //     let workedDaysCount = 0;
             
-            // Проверяем явки конкретного человека по дням месяца
-            for (let day = 1; day <= daysInMonth; day++) {
-                const colIndex = 3 + day;
-                const currentDayStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        //     // Проверяем явки конкретного человека по дням месяца
+        //     for (let day = 1; day <= daysInMonth; day++) {
+        //         const colIndex = 3 + day;
+        //         const currentDayStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 
-                // Ищем скан сотрудника именно на этом объекте в этот день
-                const hasScan = objectVisits.some(visit => 
-                    visit.userId && visit.userId.toString() === user._id.toString() && 
-                    visit.dateString === currentDayStr
-                );
+        //         // Ищем скан сотрудника именно на этом объекте в этот день
+        //         const hasScan = objectVisits.some(visit => 
+        //             visit.userId && visit.userId.toString() === user._id.toString() && 
+        //             visit.dateString === currentDayStr
+        //         );
 
-                const dayCell = row.getCell(colIndex);
-                if (hasScan) {
-                    dayCell.value = 8; // Отработал — ставим 8
-                    workedDaysCount++;
-                } else {
-                    dayCell.value = ''; // Выходной или не работал тут — пусто
-                }
+        //         const dayCell = row.getCell(colIndex);
+        //         if (hasScan) {
+        //             dayCell.value = 8; // Отработал — ставим 8
+        //             workedDaysCount++;
+        //         } else {
+        //             dayCell.value = ''; // Выходной или не работал тут — пусто
+        //         }
                 
-                dayCell.alignment = { horizontal: 'center', vertical: 'middle' };
-                dayCell.font = { name: 'Times New Roman', size: 9 };
-                dayCell.border = thinBorder;
-            }
+        //         dayCell.alignment = { horizontal: 'center', vertical: 'middle' };
+        //         dayCell.font = { name: 'Times New Roman', size: 9 };
+        //         dayCell.border = thinBorder;
+        //     }
 
-            // Индексы финальных колонок после дат
-            const colBorg = 4 + daysInMonth;
-            const colDniv = colBorg + 1;
-            const colDniv2 = colBorg + 2;
-            const colTarif1 = colBorg + 3;
-            const colTarif2 = colBorg + 4;
-            const colDodano = colBorg + 5;
-            const colUtrimano = colBorg + 6;
-            const colSuma = colBorg + 7;
-            const colPrim = colBorg + 8;
+        //     // Индексы финальных колонок после дат
+        //     const colBorg = 4 + daysInMonth;
+        //     const colDniv = colBorg + 1;
+        //     const colDniv2 = colBorg + 2;
+        //     const colTarif1 = colBorg + 3;
+        //     const colTarif2 = colBorg + 4;
+        //     const colDodano = colBorg + 5;
+        //     const colUtrimano = colBorg + 6;
+        //     const colSuma = colBorg + 7;
+        //     const colPrim = colBorg + 8;
 
-            row.getCell(colBorg).value = user.debt || null;
-            row.getCell(colDniv).value = workedDaysCount; 
-            row.getCell(colDniv2).value = null; 
-            row.getCell(colTarif1).value = user.tariff || 0;
-            row.getCell(colTarif2).value = null; 
-            row.getCell(colDodano).value = user.bonuses || null;
-            row.getCell(colUtrimano).value = user.penalties || null; 
+        //     row.getCell(colBorg).value = user.debt || null;
+        //     row.getCell(colDniv).value = workedDaysCount; 
+        //     row.getCell(colDniv2).value = null; 
+        //     row.getCell(colTarif1).value = user.tariff || 0;
+        //     row.getCell(colTarif2).value = null; 
+        //     row.getCell(colDodano).value = user.bonuses || null;
+        //     row.getCell(colUtrimano).value = user.penalties || null; 
 
-            // Автоматически определяем буквы колонок для формулы
-            const dnivLetter = sheet.getCell(rowIndex, colDniv).address.replace(/[0-9]/g, '');     
-            const tarifLetter = sheet.getCell(rowIndex, colTarif1).address.replace(/[0-9]/g, '');   
-            const dodanoLetter = sheet.getCell(rowIndex, colDodano).address.replace(/[0-9]/g, '');   
-            const utrimanoLetter = sheet.getCell(rowIndex, colUtrimano).address.replace(/[0-9]/g, ''); 
+        //     // Автоматически определяем буквы колонок для формулы
+        //     const dnivLetter = sheet.getCell(rowIndex, colDniv).address.replace(/[0-9]/g, '');     
+        //     const tarifLetter = sheet.getCell(rowIndex, colTarif1).address.replace(/[0-9]/g, '');   
+        //     const dodanoLetter = sheet.getCell(rowIndex, colDodano).address.replace(/[0-9]/g, '');   
+        //     const utrimanoLetter = sheet.getCell(rowIndex, colUtrimano).address.replace(/[0-9]/g, ''); 
 
-            // Надежная формула итоговой суммы
-            row.getCell(colSuma).value = {
-                formula: `=${dnivLetter}${rowIndex}*${tarifLetter}${rowIndex}+SUM(${dodanoLetter}${rowIndex})-SUM(${utrimanoLetter}${rowIndex})`
-            };
+        //     // Надежная формула итоговой суммы
+        //     row.getCell(colSuma).value = {
+        //         formula: `=${dnivLetter}${rowIndex}*${tarifLetter}${rowIndex}+SUM(${dodanoLetter}${rowIndex})-SUM(${utrimanoLetter}${rowIndex})`
+        //     };
 
-            row.getCell(colPrim).value = user.notes || '';
+        //     row.getCell(colPrim).value = user.notes || '';
 
-            // Применяем шрифты и выравнивание к финансовым ячейкам строки
-            for (let c = 1; c <= startFinanceCol + 8; c++) {
-                const cell = row.getCell(c);
-                cell.border = thinBorder;
-                cell.font = { name: 'Times New Roman', size: 9 };
-                if (c !== 2 && c !== 3 && c !== colPrim) { 
-                    cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                } else {
-                    cell.alignment = { horizontal: 'left', vertical: 'middle' };
-                }
-            }
-        });
+        //     // Применяем шрифты и выравнивание к финансовым ячейкам строки
+        //     for (let c = 1; c <= startFinanceCol + 8; c++) {
+        //         const cell = row.getCell(c);
+        //         cell.border = thinBorder;
+        //         cell.font = { name: 'Times New Roman', size: 9 };
+        //         if (c !== 2 && c !== 3 && c !== colPrim) { 
+        //             cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        //         } else {
+        //             cell.alignment = { horizontal: 'left', vertical: 'middle' };
+        //         }
+        //     }
+        // });
 // _____________________
 // --- ИСПРАВЛЕННЫЙ РОУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ ОБЪЕКТА ---
+
+
+// --- РОУТ ДЛЯ СКАЧИВАНИЯ ТАБЕЛЯ ОБЪЕКТА (СТРОГО ДЛЯ ТЕХ КТО ПОСЕЩАЛ) ---
 app.get('/api/attendance/download-excel', async (req, res) => {
     try {
-        // 🌟 ШАГ 1: Объявление параметров в самом верху (Устраняет ReferenceError)
+        // 🌟 ОБЪЯВЛЯЕМ ПЕРЕМЕННЫЕ В САМОМ ВЕРХУ (Это устраняет ошибку year is not defined!)
         const year = parseInt(req.query.year) || new Date().getFullYear();
         const month = parseInt(req.query.month) || (new Date().getMonth() + 1); 
         const objectName = req.query.objectName; 
@@ -348,7 +351,6 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             return res.status(400).send('Помилка: Не вказано назву об\'єкта (?objectName=...)');
         }
 
-        // 🌟 ШАГ 2: Логика вычисления дат идет строго после объявления year и month
         const daysInMonth = new Date(year, month, 0).getDate(); 
         const startDateStr = `${year}-${String(month).padStart(2, '0')}-01`;
         const nextMonth = month === 12 ? 1 : month + 1;
@@ -359,7 +361,7 @@ app.get('/api/attendance/download-excel', async (req, res) => {
         const sheet = workbook.addWorksheet(`AT-${month}`);
         sheet.views = [{ showGridLines: true }];
 
-        // --- НАСТРОЙКА ШИРИНЫ КОЛОНОК ---
+        // Настройка ширины колонок
         sheet.getColumn(1).width = 4;   
         sheet.getColumn(2).width = 32;  
         sheet.getColumn(3).width = 14;  
@@ -384,7 +386,7 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             right: { style: 'thin', color: { argb: 'BFBFBF' } }
         };
 
-        // --- ШАПКА ТАБЛИЦЫ ---
+        // Шапка таблицы
         sheet.mergeCells(`D1:${sheet.getCell(1, 3 + daysInMonth).address}`);
         const monthCell = sheet.getCell('D1');
         monthCell.value = `Табель: ${objectName} — Місяць ${month}.${year}`;
@@ -429,26 +431,20 @@ app.get('/api/attendance/download-excel', async (req, res) => {
             }
         }
 
-        // --- ФИЛЬТРАЦИЯ И ЗАПОЛНЕНИЕ ---
-        const activeUserIds = await Visit.distinct('userId', {
-            objectName: objectName,
-            dateString: { $gte: startDateStr, $lt: endDateStr }
-        });
-
-        if (!activeUserIds || activeUserIds.length === 0) {
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            res.setHeader('Content-Disposition', `attachment; filename=Tabel_Empty_${month}_${year}.xlsx`);
-            await workbook.xlsx.write(res);
-            return res.end();
-        }
-
-        const usersOnObject = await User.find({ _id: { $in: activeUserIds } }).sort({ name: 1 });
+        // Загружаем только те визиты, которые относятся к этому объекту в отчетном месяце
         const objectVisits = await Visit.find({
             objectName: objectName,
             dateString: { $gte: startDateStr, $lt: endDateStr }
         });
 
-        usersOnObject.forEach((user, index) => {
+        // Вытаскиваем уникальные ID сотрудников, которые отметились на этом объекте хоть раз
+        const uniqueUserIds = [...new Set(objectVisits.map(v => v.userId ? v.userId.toString() : null))].filter(Boolean);
+
+        // Загружаем из базы карточки ТОЛЬКО этих сотрудников (и сортируем по имени)
+        const users = await User.find({ _id: { $in: uniqueUserIds } }).sort({ name: 1 });
+
+        // Заполняем строки данными сотрудников
+        users.forEach((user, index) => {
             const rowIndex = 4 + index; 
             const row = sheet.getRow(rowIndex);
             row.height = 18; 
@@ -521,7 +517,7 @@ app.get('/api/attendance/download-excel', async (req, res) => {
                 }
             }
         });
-
+        // --- ОТПРАВКА ГОТОВОГО ФАЙЛА В БРАУЗЕР ---
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename=Tabel_${month}_${year}.xlsx`);
 
@@ -536,42 +532,14 @@ app.get('/api/attendance/download-excel', async (req, res) => {
 
 
 
-
 // ______________________
-
-// --- РОУТ АВТОРИЗАЦИИ ДЛЯ БРИГАДИРОВ И АДМИНОВ ---
-app.post('/api/auth/login', async (req, res) => {
-    try {
-        const { login, password } = req.body;
-
-        // Ищем аккаунт в коллекции (для простоты пароль пока проверяем строкой)
-        // Если у тебя еще нет модели Account, мы пропишем её создание прямо перед роутом
-        const Account = mongoose.model('Account');
-        const account = await Account.findOne({ login, password });
-
-        if (!account) {
-            return res.status(401).json({ success: false, message: 'Неверный логин или пароль' });
-        }
-
-        // Если всё верно, отдаем данные аккаунта и объект
-        res.json({
-            success: true,
-            role: account.role,
-            objectName: account.objectName,
-            login: account.login
-        });
-    } catch (error) {
-        console.error('Ошибка авторизации:', error);
-        res.status(500).json({ message: 'Ошибка сервера при авторизации' });
-    }
-});
 
 // --- РОУТ ДЛЯ ПОЛУЧЕНИЯ ВСЕХ УНИКАЛЬНЫХ ОБЪЕКТОВ ---
 app.get('/api/objects', async (req, res) => {
     try {
         // Собираем уникальные объекты из аккаунтов бригадиров
         const objectsFromAccounts = await Account.distinct('objectName');
-        // Собираем уникальные объекты из фактических посещений (на всякий случай)
+        // Собираем уникальные объекты из фактических посещений
         const objectsFromVisits = await Visit.distinct('objectName');
 
         // Объединяем оба списка и убираем дубликаты/пустые строки
@@ -584,8 +552,7 @@ app.get('/api/objects', async (req, res) => {
     }
 });
 
-
 // --- ЗАПУСК СЕРВЕРА (Всегда самый конец файла) ---
 app.listen(PORT, () => {
-    console.log(`📡 Бэкенд-сервер успешно запущен на порту ${PORT}`);
+    console.error(`📡 Бэкенд-сервер STRUCTUM успешно запущен на порту ${PORT}`);
 });
