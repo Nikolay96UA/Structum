@@ -62,7 +62,7 @@
                     
                     // Формируем правильную ссылку на скачивание с query-параметром имени объекта
                     // Для Render замените на: https://onrender.com...
-                    const downloadUrl = `http://localhost:3000/api/attendance/download-excel?objectName=${encodeURIComponent(objectName)}`;
+                    const downloadUrl = `https://structum.onrender.com/api/attendance/download-excel?objectName=${encodeURIComponent(objectName)}`;
                     
                     card.innerHTML = `
                         <div class="object-name">🏗️ ${objectName}</div>
