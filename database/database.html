@@ -72,12 +72,41 @@
 
         <!-- 🌟 БЛОК ДЛЯ ФИЛЬТРАЦИИ И ПОИСКА -->
 <div style="background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 600px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+    
+<!-- 🌟 СИНХРОНИЗИРОВАННЫЙ БЛОК ФИЛЬТРАЦИИ И ПОИСКА -->
+<div style="background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 600px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+    <!-- Поиск по ФИО остается текстовым -->
     <input type="text" id="searchName" placeholder="🔍 Пошук за ім'ям..." style="flex: 1; min-width: 180px; margin: 0; padding: 8px;">
     
-    <input type="text" id="searchJob" placeholder="🛠️ Пошук за посадою..." style="flex: 1; min-width: 150px; margin: 0; padding: 8px;">
+    <!-- Фильтр по должности -->
+    <select id="searchJob" style="flex: 1; min-width: 150px; margin: 0; padding: 8px; height: 38px;">
+        <option value="">🛠️ Всі посади</option>
+        <option value="монтажник">Монтажник</option>
+        <option value="зварник">Зварник</option>
+        <option value="електромонтер">Електромонтер</option>
+        <option value="бригадир">Бригадир</option>
+        <option value="стропальник">Стропальник</option>
+        <option value="арматурник">Арматурник</option>
+        <option value="підсобник">Підсобник</option>
+        <option value="інженер">Інженер</option>
+        <option value="комірник">Комірник</option>
+        <option value="механік">Механік</option>
+        <option value="геодезист">Геодезист</option>
+        <option value="Начальник бази">Начальник бази</option>
+        <option value="начальник дільниці">Начальник дільниці</option>
+        <option value="виконроб">Виконроб</option>
+        <option value="Завідувач господарства">Завідувач господарства</option>
+        <option value="інженер ПО">Інженер ПО</option>
+        <option value="водій">Водій</option>
+        <option value="машиніст автокрана">Машиніст автокрана</option>
+    </select>
     
-    <input type="text" id="searchObject" placeholder="🏗️ Пошук за об'єктом..." style="flex: 1; min-width: 150px; margin: 0; padding: 8px;">
+    <!-- Фильтр по объектам (заполняется динамически) -->
+    <select id="searchObject" style="flex: 1; min-width: 150px; margin: 0; padding: 8px; height: 38px;">
+        <option value="">🏗️ Всі об'єкти</option>
+    </select>
 </div>
+    </div>
 
 
     </form>
@@ -89,24 +118,45 @@
     const form = document.getElementById('userForm');
     const list = document.getElementById('usersList');
     const API_URL = 'https://structum.onrender.com/api/users';
+    const OBJECTS_API_URL = 'https://structum.onrender.com/api/objects'; // Роут для списка объектов
     
-    let allUsers = []; // 🌟 Глобальный массив для хранения оригинала списка пользователей
+    let allUsers = []; 
+
+    // 🌟 НОВАЯ ФУНКЦИЯ: Динамическая загрузка живых объектов в фильтр
+    async function loadObjectsForFilter() {
+        try {
+            const response = await fetch(OBJECTS_API_URL);
+            const data = await response.json();
+            
+            if (data.success && data.objects.length > 0) {
+                const objectSelect = document.getElementById('searchObject');
+                data.objects.forEach(objName => {
+                    const option = document.createElement('option');
+                    option.value = objName.toLowerCase(); // Храним в нижнем регистре для удобства поиска
+                    option.textContent = objName;
+                    objectSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Не вдалося завантажити об\'єкти для фільтра:', error);
+        }
+    }
 
     // Функция для загрузки списка пользователей
     async function loadUsers() {
         list.innerHTML = 'Завантаження...';
         try {
             const response = await fetch(API_URL);
-            allUsers = await response.json(); // 🌟 Сохраняем полученные данные в глобальный массив
+            allUsers = await response.json(); 
             
-            renderUsers(allUsers); // 🌟 Вызываем функцию отрисовки для всего списка
+            renderUsers(allUsers); 
         } catch (error) {
             list.innerHTML = 'Помилка підключення до сервера Node.js';
             console.error(error);
         }
     }
 
-    // 🌟 ФУНКЦИЯ ДЛЯ ОТРИСОВКИ СПИСКА (РАБОТАЕТ И ДЛЯ СТАНДАРТНОГО СПИСКА, И ДЛЯ ФИЛЬТРОВ)
+    // Функция для отрисовки списка на экране
     function renderUsers(usersToRender) {
         list.innerHTML = ''; 
         
@@ -118,33 +168,27 @@
         usersToRender.forEach((user, index) => {
             const li = document.createElement('li');
 
-            // Текстовый блок (контейнер для имени, должности и бэйджа локации)
             const infoDiv = document.createElement('div');
             infoDiv.style.display = 'flex';
             infoDiv.style.alignItems = 'center';
             infoDiv.style.gap = '15px';
             infoDiv.style.flexWrap = 'wrap';
 
-            // Основной текст (Имя и Должность)
             const mainText = document.createElement('span');
             mainText.textContent = `№${index + 1} | ${user.name} (${user.job})`;
             infoDiv.appendChild(mainText);
 
-            // 🌟 ОБНОВЛЕННЫЙ ЦВЕТНОЙ ИНДИКАТОР ЛОКАЦИИ
             const locationBadge = document.createElement('span');
             locationBadge.style.fontSize = '12px';
             locationBadge.style.fontWeight = 'bold';
             locationBadge.style.padding = '4px 10px';
             locationBadge.style.borderRadius = '20px';
             
-            // Проверяем, был ли сотрудник сегодня на работе
             if (user.isScannedToday) {
-                // Сегодня на объекте — зеленый индикатор
                 locationBadge.textContent = `🟢 Сьогодні на: ${user.lastLocation}`;
                 locationBadge.style.backgroundColor = '#d4edda';
                 locationBadge.style.color = '#155724';
             } else {
-                // Сегодня нет, но показываем, где он был в последний раз — красный индикатор
                 if (user.lastLocation === 'Немає відміток') {
                     locationBadge.textContent = '🔴 Не відмічений взагалі';
                 } else {
@@ -157,7 +201,6 @@
             infoDiv.appendChild(locationBadge);
             li.appendChild(infoDiv);
 
-            // Кнопка удаления (увольнения)
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = 'Звільнений';
             deleteBtn.className = 'btn-delete';
@@ -173,16 +216,24 @@
         });
     }
 
-    // 🌟 ФУНКЦИЯ ЖИВОЙ ФИЛЬТРАЦИИ НА КЛИЕНТЕ
+    // 🌟 УЛУЧШЕННАЯ ФУНКЦИЯ ЖИВОЙ ФИЛЬТРАЦИИ
     function filterUsers() {
-        const nameQuery = document.getElementById('searchName') ? document.getElementById('searchName').value.toLowerCase().trim() : '';
-        const jobQuery = document.getElementById('searchJob') ? document.getElementById('searchJob').value.toLowerCase().trim() : '';
-        const objectQuery = document.getElementById('searchObject') ? document.getElementById('searchObject').value.toLowerCase().trim() : '';
+        const nameQuery = document.getElementById('searchName').value.toLowerCase().trim();
+        const jobQuery = document.getElementById('searchJob').value.toLowerCase();
+        const objectQuery = document.getElementById('searchObject').value.toLowerCase();
 
         const filtered = allUsers.filter(user => {
+            const userJob = user.job ? user.job.toLowerCase() : '';
+            const userObject = user.lastLocation ? user.lastLocation.toLowerCase() : '';
+
+            // Проверка по имени (частичное совпадение)
             const matchesName = user.name ? user.name.toLowerCase().includes(nameQuery) : false;
-            const matchesJob = user.job ? user.job.toLowerCase().includes(jobQuery) : false;
-            const matchesObject = user.lastLocation ? user.lastLocation.toLowerCase().includes(objectQuery) : false;
+            
+            // Проверка по должности (если выбрано "Всі", то true, иначе строгое совпадение)
+            const matchesJob = jobQuery === '' ? true : userJob === jobQuery;
+            
+            // Проверка по объекту (если выбрано "Всі", то true, иначе строгое совпадение)
+            const matchesObject = objectQuery === '' ? true : userObject === objectQuery;
 
             return matchesName && matchesJob && matchesObject;
         });
@@ -190,7 +241,7 @@
         renderUsers(filtered);
     }
 
-    // Функция для удаления сервера
+    // Функция для удаления пользователя
     async function deleteUser(id) {
         try {
             const response = await fetch(`${API_URL}/${id}`, {
@@ -208,12 +259,12 @@
         }
     }
 
-    // Обработчик отправки формы
+    // Обработчик отправки формы добавления
     form.addEventListener('submit', async (e) => {
         e.preventDefault(); 
 
         const name = document.getElementById('userName').value.trim();
-        const job = document.getElementById('userJob').value; // Автоматически берет значение из select
+        const job = document.getElementById('userJob').value; 
 
         try {
             const response = await fetch(API_URL, {
@@ -233,20 +284,18 @@
         }
     });
 
-    // 🌟 НАВЕШИВАЕМ СЛУШАТЕЛИ СОБЫТИЙ ПОСЛЕ ЗАГРУЗКИ ДОКУМЕНТА
+    // 🌟 НАВЕШИВАЕМ СЛУШАТЕЛИ НА ИЗМЕНЕНИЯ СЕЛЕКТОВ И ИНПУТА
     document.addEventListener('DOMContentLoaded', () => {
-        const searchNameInput = document.getElementById('searchName');
-        const searchJobInput = document.getElementById('searchJob');
-        const searchObjectInput = document.getElementById('searchObject');
-
-        if (searchNameInput) searchNameInput.addEventListener('input', filterUsers);
-        if (searchJobInput) searchJobInput.addEventListener('input', filterUsers);
-        if (searchObjectInput) searchObjectInput.addEventListener('input', filterUsers);
+        document.getElementById('searchName').addEventListener('input', filterUsers);
+        document.getElementById('searchJob').addEventListener('change', filterUsers);   // change для select
+        document.getElementById('searchObject').addEventListener('change', filterUsers);// change для select
     });
 
-    // Загружаем пользователей сразу при открытии страницы
-    loadUsers();
+    // Инициализация при загрузке страницы
+    loadObjectsForFilter(); // 1. Скачиваем и вставляем объекты в выпадающий список
+    loadUsers();            // 2. Скачиваем сотрудников
 </script>
+
 
 
 </body>
