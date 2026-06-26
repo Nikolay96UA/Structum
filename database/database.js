@@ -455,26 +455,36 @@ app.get('/api/objects', async (req, res) => {
     }
 });
 
+// --- ЗАЩИЩЕННЫЙ РОУТ УДАЛЕНИЯ ОБЪЕКТА С ПАРОЛЕМ АДМИНИСТРАТОРА ---
 app.delete('/api/objects', async (req, res) => {
     try {
-        const { objectName } = req.body;
+        const { objectName, adminPassword } = req.body;
 
         if (!objectName) {
-            return res.status(400).json({ success: false, message: 'Не вказано назву об\'єкта' });
+            return res.status(400).json({ success: false, message: 'Не вказано назву об\'єкта!' });
         }
 
-        // Удаляем объект из коллекции объектов
-        await ConstructionObject.findOneAndDelete({ name: objectName });
+        // 🌟 ПРОВЕРКА ПАРОЛЯ: Задай свой секретный пароль администратора компании
+        const MASTER_ADMIN_PASSWORD = "admin_secret_password_2026"; // Поменяй на любой свой пароль
 
-        // Важно: Посещения (Visit) и аккаунты мы не удаляем, чтобы не ломать историю, 
-        // но сам табель из списка доступных на админке и регистрации пропадет.
+        if (!adminPassword || adminPassword !== MASTER_ADMIN_PASSWORD) {
+            return res.status(403).json({ success: false, message: 'Невірний або відсутній пароль адміністратора! Видалення заблоковано.' });
+        }
 
-        res.json({ success: true, message: 'Об\'єкт успішно видалено зі списку!' });
+        // Если пароль верный — удаляем объект из коллекции объектов
+        const deletedObject = await ConstructionObject.findOneAndDelete({ name: objectName });
+
+        if (!deletedObject) {
+            return res.status(404).json({ success: false, message: 'Об\'єкт не знайдено в базі даних.' });
+        }
+
+        res.json({ success: true, message: `Об'єкт "${objectName}" та його табель успішно видалено зі списку!` });
     } catch (error) {
         console.error('Помилка при видаленні об\'єкта:', error);
         res.status(500).json({ message: 'Помилка сервера при видаленні' });
     }
 });
+
 
 
 // --- ЗАПУСК СЕРВЕРА (Всегда самый конец файла) ---
