@@ -456,22 +456,33 @@ app.get('/api/objects', async (req, res) => {
 });
 
 // --- ЗАЩИЩЕННЫЙ РОУТ УДАЛЕНИЯ ОБЪЕКТА С ПАРОЛЕМ АДМИНИСТРАТОРА ---
+// --- ЗАЩИЩЕННЫЙ РОУТ УДАЛЕНИЯ ОБЪЕКТА С ПРОВЕРКОЙ ПАРОЛЯ АККАУНТА ---
 app.delete('/api/objects', async (req, res) => {
     try {
-        const { objectName, adminPassword } = req.body;
+        const { objectName, login, password } = req.body;
 
-        if (!objectName) {
-            return res.status(400).json({ success: false, message: 'Не вказано назву об\'єкта!' });
+        if (!objectName || !login || !password) {
+            return res.status(400).json({ success: false, message: 'Заповніть всі поля запросу!' });
         }
 
-        // 🌟 ПРОВЕРКА ПАРОЛЯ: Задай свой секретный пароль администратора компании
-        const MASTER_ADMIN_PASSWORD = "admin_secret_password_2026"; // Поменяй на любой свой пароль
+        // 🌟 1. Находим в базе данных аккаунт пользователя, который пытается удалить объект
+        const currentAccount = await Account.findOne({ login });
 
-        if (!adminPassword || adminPassword !== MASTER_ADMIN_PASSWORD) {
-            return res.status(403).json({ success: false, message: 'Невірний або відсутній пароль адміністратора! Видалення заблоковано.' });
+        if (!currentAccount) {
+            return res.status(404).json({ success: false, message: 'Користувача не знайдено в системі.' });
         }
 
-        // Если пароль верный — удаляем объект из коллекции объектов
+        // 🌟 2. Проверяем, совпадает ли введённый пароль с паролем этого аккаунта
+        if (currentAccount.password !== password) {
+            return res.status(403).json({ success: false, message: 'Невірний пароль від вашого акаунту! Видалення заблоковано.' });
+        }
+
+        // 🌟 3. Дополнительная защита: проверять роль (удалять могут только админы)
+        if (currentAccount.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Недостатньо прав! Тільки адміністратор може видаляти об\'єкти.' });
+        }
+
+        // Если все проверки пройдены — удаляем объект из коллекции объектов
         const deletedObject = await ConstructionObject.findOneAndDelete({ name: objectName });
 
         if (!deletedObject) {
@@ -484,6 +495,7 @@ app.delete('/api/objects', async (req, res) => {
         res.status(500).json({ message: 'Помилка сервера при видаленні' });
     }
 });
+
 
 
 
