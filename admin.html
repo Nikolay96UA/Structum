@@ -66,9 +66,13 @@
                     const downloadUrl = `https://structum.onrender.com/api/attendance/download-excel?objectName=${encodeURIComponent(objectName)}`;
                     
                     card.innerHTML = `
-                        <div class="object-name">🏗️ ${objectName}</div>
-                        <a href="${downloadUrl}" class="btn-download">📊 Скачати табель Excel</a>
-                    `;
+    <div class="object-name">🏗️ ${objectName}</div>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <a href="${downloadUrl}" class="btn-download" style="flex: 1;">📊 Табель Excel</a>
+        <button onclick="deleteObject('${objectName}')" style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer;">❌ Видалити</button>
+    </div>
+`;
+
                     grid.appendChild(card);
                 });
             } else {
@@ -79,6 +83,30 @@
             loadingText.textContent = 'Помилка завантаження даних із сервера бэкенда.';
         }
     }
+
+async function deleteObject(name) {
+    if (!confirm(`Ви впевнені, що хочете видалити об'єкт "${name}" та його табель зі списку?`)) return;
+
+    try {
+        const response = await fetch('https://onrender.com', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ objectName: name })
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+            alert(data.message);
+            loadObjects(); // Перезагружаем список на экране, объект исчезнет!
+        } else {
+            alert('Помилка при видаленні');
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Помилка підключення до сервера');
+    }
+}
+
 
     // Запускаем загрузку при открытии страницы
     loadObjects();

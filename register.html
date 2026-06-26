@@ -127,13 +127,11 @@
         </div>
         <div class="form-group">
             <label for="objectName">Будівельний об'єкт</label>
-            <select id="objectName" required>
-                <option value="" disabled selected>Оберіть об'єкт зі списку</option>
-                <option value="ПС 330 Чернігівська">ПС 330 Чернігівська</option>
-                <option value="Дніпровська Будова">Дніпровська Будова</option>
-                <option value="Київська Філія">Київська Філія</option>
-                <option value="new_object_option">➕ Додати новий об'єкт...</option>
-            </select>
+           <select id="objectName" required>
+    <option value="" disabled selected>Оберіть об'єкт зі списку</option>
+    <option value="new_object_option">➕ Додати новий об'єкт...</option>
+</select>
+
 
             <!-- Скрытое поле для ввода нового объекта вручную -->
             <div id="customObjectGroup">
@@ -223,6 +221,35 @@
             messageDiv.style.display = 'block';
         }
     });
+
+
+    // ________________
+
+    // 🌟 Автоматическая загрузка синхронизированных объектов с сервера
+async function fetchSyncObjects() {
+    try {
+        // Меняем на локальный или render-адрес
+        const response = await fetch('https://onrender.com');
+        const data = await response.json();
+        
+        if (data.success) {
+            const select = document.getElementById('objectName');
+            // Вставляем объекты перед кнопкой "Добавить новый"
+            data.objects.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.insertBefore(opt, select.lastElementChild);
+            });
+        }
+    } catch (error) {
+        console.error('Ошибка синхронизации списка объектов:', error);
+    }
+}
+
+// Запускаем при загрузке страницы
+fetchSyncObjects();
+
 </script>
 
 </body>
