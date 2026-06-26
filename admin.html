@@ -85,7 +85,7 @@
     }
 
 async function deleteObject(name) {
-    // 🌟 Получаем логин текущего пользователя из памяти браузера
+    // Получаем логин текущего пользователя из памяти браузера
     const currentLogin = localStorage.getItem('userLogin');
 
     if (!currentLogin) {
@@ -104,14 +104,14 @@ async function deleteObject(name) {
     }
 
     try {
-        // Замени на 'https://onrender.com' для живого сайта на Render
+        // Укажи адрес 'http://localhost:3000/api/objects' для локального теста
         const response = await fetch('https://onrender.com', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 objectName: name,
-                login: currentLogin,             // 🌟 Отправляем логин
-                password: passwordInput.trim()   // 🌟 Отправляем пароль аккаунта
+                login: currentLogin,             
+                password: passwordInput.trim()   
             })
         });
 
@@ -121,7 +121,6 @@ async function deleteObject(name) {
             alert(data.message);
             loadObjects(); // Перезагружаем сетку объектов на экране
         } else {
-            // Если пароль не подошел или роль не "admin"
             alert(`Помилка: ${data.message}`);
         }
     } catch (error) {
@@ -129,6 +128,7 @@ async function deleteObject(name) {
         alert('Помилка підключення до сервера бэкенда');
     }
 }
+
 
 
     // Запускаем загрузку при открытии страницы

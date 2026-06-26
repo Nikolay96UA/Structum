@@ -457,6 +457,7 @@ app.get('/api/objects', async (req, res) => {
 
 // --- ЗАЩИЩЕННЫЙ РОУТ УДАЛЕНИЯ ОБЪЕКТА С ПАРОЛЕМ АДМИНИСТРАТОРА ---
 // --- ЗАЩИЩЕННЫЙ РОУТ УДАЛЕНИЯ ОБЪЕКТА С ПРОВЕРКОЙ ПАРОЛЯ АККАУНТА ---
+// --- ЗАЩИЩЕННЫЙ РОУТ УДАЛЕНИЯ ОБЪЕКТА (ПРОВЕРКА ТОЛЬКО ЛОГИНА И ПАРОЛЯ) ---
 app.delete('/api/objects', async (req, res) => {
     try {
         const { objectName, login, password } = req.body;
@@ -465,24 +466,19 @@ app.delete('/api/objects', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Заповніть всі поля запросу!' });
         }
 
-        // 🌟 1. Находим в базе данных аккаунт пользователя, который пытается удалить объект
+        // 1. Находим аккаунт в базе данных по логину
         const currentAccount = await Account.findOne({ login });
 
         if (!currentAccount) {
             return res.status(404).json({ success: false, message: 'Користувача не знайдено в системі.' });
         }
 
-        // 🌟 2. Проверяем, совпадает ли введённый пароль с паролем этого аккаунта
+        // 2. Проверяем, совпадает ли введённый пароль с паролем этого аккаунта
         if (currentAccount.password !== password) {
             return res.status(403).json({ success: false, message: 'Невірний пароль від вашого акаунту! Видалення заблоковано.' });
         }
 
-        // 🌟 3. Дополнительная защита: проверять роль (удалять могут только админы)
-        if (currentAccount.role !== 'admin') {
-            return res.status(403).json({ success: false, message: 'Недостатньо прав! Тільки адміністратор може видаляти об\'єкти.' });
-        }
-
-        // Если все проверки пройдены — удаляем объект из коллекции объектов
+        // 3. Удаляем объект из коллекции объектов
         const deletedObject = await ConstructionObject.findOneAndDelete({ name: objectName });
 
         if (!deletedObject) {
@@ -495,6 +491,7 @@ app.delete('/api/objects', async (req, res) => {
         res.status(500).json({ message: 'Помилка сервера при видаленні' });
     }
 });
+
 
 
 
