@@ -104,23 +104,32 @@
                 infoDiv.appendChild(mainText);
 
                 // 🌟 ЦВЕТНОЙ ИНДИКАТОР АКТУАЛЬНОЙ ЛОКАЦИИ ЗА СЕГОДНЯ
+                                // 🌟 ОБНОВЛЕННЫЙ ЦВЕТНОЙ ИНДИКАТОР ЛОКАЦИИ
                 const locationBadge = document.createElement('span');
-                locationBadge.textContent = user.lastLocation === 'Не відмічений' ? '🔴 Не відмічений' : `🏗️ ${user.lastLocation}`;
                 locationBadge.style.fontSize = '12px';
                 locationBadge.style.fontWeight = 'bold';
                 locationBadge.style.padding = '4px 10px';
                 locationBadge.style.borderRadius = '20px';
                 
-                // Настраиваем цвета в зависимости от статуса присутствия
-                if (user.lastLocation === 'Не відмічений') {
-                    locationBadge.style.backgroundColor = '#f8d7da';
-                    locationBadge.style.color = '#721c24';
-                } else {
+                // Проверяем, был ли сотрудник сегодня на работе
+                if (user.isScannedToday) {
+                    // Сегодня на объекте — зеленый индикатор
+                    locationBadge.textContent = `🟢 Сьогодні на: ${user.lastLocation}`;
                     locationBadge.style.backgroundColor = '#d4edda';
                     locationBadge.style.color = '#155724';
+                } else {
+                    // Сегодня нет, но показываем, где он был в последний раз — красный индикатор
+                    if (user.lastLocation === 'Немає відміток') {
+                        locationBadge.textContent = '🔴 Не відмічений взагалі';
+                    } else {
+                        locationBadge.textContent = `🔴 Сьогодні ніде (остання: ${user.lastLocation})`;
+                    }
+                    locationBadge.style.backgroundColor = '#f8d7da';
+                    locationBadge.style.color = '#721c24';
                 }
                 
                 infoDiv.appendChild(locationBadge);
+
                 li.appendChild(infoDiv);
 
                 // Кнопка удаления (увольнения)

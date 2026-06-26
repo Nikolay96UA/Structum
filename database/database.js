@@ -41,39 +41,42 @@ const User = mongoose.model('User', userSchema);
 
 // 1. Получить всех пользователей из базы
 // 1. Получить всех пользователей из базы с актуальной локацией за сегодня
+// 1. Получить всех пользователей с последней исторической локацией и статусом на сегодня
 app.get('/api/users', async (req, res) => {
     try {
-        const users = await User.find().lean(); // .lean() преобразует документы Mongoose в обычные JS-объекты для легкого изменения
+        const users = await User.find().lean();
         
-        // Получаем строковую дату сегодняшнего дня (ГГГГ-ММ-ДД)
+        // 1. Получаем строковую дату СЕГОДНЯШНЕГО дня (ГГГГ-ММ-ДД)
         const todayStr = new Date().toISOString().split('T')[0];
 
-        // Получаем ВСЕ визиты за сегодняшний день
-        const todayVisits = await Visit.find({ dateString: todayStr });
+        // 2. Загружаем абсолютно ВСЕ посещения из базы для анализа истории
+        const allVisits = await Visit.find().sort({ scannedAt: -1 }).lean();
 
-        // Для каждого пользователя ищем его последнюю сегодняшнюю отметку
         const usersWithLocation = users.map(user => {
-            // Ищем визиты конкретно этого сотрудника за сегодня
-            const userTodayVisits = todayVisits.filter(v => v.userId && v.userId.toString() === user._id.toString());
+            // Ищем все визиты конкретно этого человека за всё время
+            const userVisits = allVisits.filter(v => v.userId && v.userId.toString() === user._id.toString());
             
-            let lastLocation = 'Не відмічений'; // Статус по умолчанию, если сканов сегодня не было
+            let lastLocation = 'Немає відміток';
+            let isScannedToday = false;
 
-            if (userTodayVisits.length > 0) {
-                // Сортируем по времени сканирования (от самых свежих к старым)
-                userTodayVisits.sort((a, b) => new Date(b.scannedAt) - new Date(a.scannedAt));
-                // Берем имя объекта из самого последнего скана
-                lastLocation = userTodayVisits[0].objectName;
+            if (userVisits.length > 0) {
+                // Так как мы отсортировали allVisits по убыванию времени, первый элемент — самый свежий в истории
+                lastLocation = userVisits[0].objectName;
+
+                // Проверяем, был ли этот самый свежий визит (или любой другой) сделан именно СЕГОДНЯ
+                isScannedToday = userVisits.some(v => v.dateString === todayStr);
             }
 
             return {
                 ...user,
-                lastLocation // Добавляем новое динамическое поле в JSON-ответ
+                lastLocation,     // Имя объекта за всё время (или сегодня, если он там)
+                isScannedToday    // Булево поле (true/false) — был ли скан СЕГОДНЯ
             };
         });
 
         res.json(usersWithLocation);
     } catch (error) {
-        console.error('Ошибка при получении пользователей с локацией:', error);
+        console.error('Ошибка при получении пользователей:', error);
         res.status(500).json({ message: 'Ошибка при получении данных' });
     }
 });
