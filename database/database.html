@@ -1,41 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-    <!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Локальная БД и HTML</title>
+    <title>STRUCTUM — База даних</title>
     <style>
-        body { font-family: sans-serif; margin: 40px; }
-        form { margin-bottom: 20px; }
-        input { margin: 5px; padding: 5px; }
-        button { padding: 5px 10px; cursor: pointer; }
-        ul { list-style-type: square; }
+        body { font-family: sans-serif; margin: 40px; background-color: #f4f6f9; color: #333; }
+        header { margin-bottom: 30px; }
+        header a { text-decoration: none; font-weight: bold; color: #28a745; font-size: 18px; letter-spacing: 1px; }
+        form { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 400px; }
+        input, select { width: 100%; box-sizing: border-box; margin: 8px 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; background-color: white; }
+        input:focus, select:focus { border-color: #28a745; outline: none; }
+        button { padding: 10px 15px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; transition: background 0.2s; }
+        button[type="submit"] { background-color: #28a745; color: white; width: 100%; margin-top: 10px; }
+        button[type="submit"]:hover { background-color: #218838; }
+        .btn-delete { background-color: #dc3545; color: white; }
+        .btn-delete:hover { background-color: #bd2130; }
+        ul { list-style-type: none; padding: 0; max-width: 600px; }
+        li { background: white; padding: 12px 15px; margin-bottom: 8px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
-     <header>
-<a href="../index.html">STRUCTUM облік персоналу</a>     </header>
+    <header>
+        <a href="../index.html">STRUCTUM облік персоналу</a>
+    </header>
 
-    <h2>Добавить пользователя в JSON БД</h2>
+    <h2>Додати користувача до бази даних</h2>
     <form id="userForm">
-        <input type="text" id="userName" placeholder="Имя" required><br>
-        <input type="text" id="userJob" placeholder="Посада" required><br>
+        <input type="text" id="userName" placeholder="ПІБ працівника" coding="utf-8" required><br>
+
+        <!-- 🌟 ВЫПАДАЮЩИЙ СПИСОК ДОЛЖНОСТЕЙ ВМЕСТО СТАРГО INPUT -->
+<div class="form-group">
+    <label for="userJob">Посада працівника</label>
+    <select id="userJob" required>
+        <option value="" disabled selected>Оберіть посаду зі списку</option>
+        
+        <!-- 🌟 ГРУППА: ОСНОВНОЙ ПЕРСОНАЛ -->
+        <optgroup label="Основний персонал">
+            <option value="монтажник">Монтажник</option>
+            <option value="зварник">Зварник</option>
+            <option value="електромонтер">Електромонтер</option>
+            <option value="бригадир">Бригадир</option>
+            <option value="стропальник">Стропальник</option>
+            <option value="арматурник">Арматурник</option>
+            <option value="підсобник">Підсобник</option>
+        </optgroup>
+
+        <!-- 🌟 ГРУППА: ІТР -->
+        <optgroup label="ІТР">
+            <option value="інженер">Інженер</option>
+            <option value="комірник">Комірник</option> <!-- Заменили кладовий на комірник, как было в твоей базе -->
+            <option value="механік">Механік</option>
+            <option value="геодезист">Геодезист</option>
+            <option value="Начальник бази">Начальник бази</option>
+            <option value="начальник дільниці">Начальник дільниці</option>
+            <option value="виконроб">Виконроб</option>
+            <option value="Завідувач господарства">Завідувач господарства</option>
+            <option value="інженер ПО">Інженер ПО</option>
+        </optgroup>
+
+        <!-- 🌟 ГРУППА: ТРАНСПОРТНИЙ ВІДДІЛ -->
+        <optgroup label="Транспортний відділ">
+            <option value="водій">Водій</option>
+            <option value="машиніст автокрана">Машиніст автокрана</option>
+        </optgroup>
+    </select>
+</div>
+        
         <button type="submit">Сохранить в базу</button>
     </form>
 
-    <h2>Список пользователей из файла:</h2>
+    <h2>Список користувачів в системі:</h2>
     <ul id="usersList"></ul>
-
-
-
-
 
 <script>
     const form = document.getElementById('userForm');
@@ -53,21 +90,46 @@
             
             users.forEach((user, index) => {
                 const li = document.createElement('li');
-                li.style.marginBottom = '10px'; // Немного отступа между строками
 
-                // Создаем текстовый блок с информацией о пользователе
-                const textNode = document.createTextNode(`№${index + 1} | ${user.name} (${user.job}) `);
-                li.appendChild(textNode);
+                // Текстовый блок (контейнер для имени, должности и бэйджа локации)
+                const infoDiv = document.createElement('div');
+                infoDiv.style.display = 'flex';
+                infoDiv.style.alignItems = 'center';
+                infoDiv.style.gap = '15px';
+                infoDiv.style.flexWrap = 'wrap';
 
-                // СОЗДАЕМ КНОПКУ УДАЛЕНИЯ
+                // Основной текст (Имя и Должность)
+                const mainText = document.createElement('span');
+                mainText.textContent = `№${index + 1} | ${user.name} (${user.job})`;
+                infoDiv.appendChild(mainText);
+
+                // 🌟 ЦВЕТНОЙ ИНДИКАТОР АКТУАЛЬНОЙ ЛОКАЦИИ ЗА СЕГОДНЯ
+                const locationBadge = document.createElement('span');
+                locationBadge.textContent = user.lastLocation === 'Не відмічений' ? '🔴 Не відмічений' : `🏗️ ${user.lastLocation}`;
+                locationBadge.style.fontSize = '12px';
+                locationBadge.style.fontWeight = 'bold';
+                locationBadge.style.padding = '4px 10px';
+                locationBadge.style.borderRadius = '20px';
+                
+                // Настраиваем цвета в зависимости от статуса присутствия
+                if (user.lastLocation === 'Не відмічений') {
+                    locationBadge.style.backgroundColor = '#f8d7da';
+                    locationBadge.style.color = '#721c24';
+                } else {
+                    locationBadge.style.backgroundColor = '#d4edda';
+                    locationBadge.style.color = '#155724';
+                }
+                
+                infoDiv.appendChild(locationBadge);
+                li.appendChild(infoDiv);
+
+                // Кнопка удаления (увольнения)
                 const deleteBtn = document.createElement('button');
                 deleteBtn.textContent = 'Звільнений';
-                deleteBtn.style.marginLeft = '10px';
-                deleteBtn.style.cursor = 'pointer';
+                deleteBtn.className = 'btn-delete';
 
-                // Навешиваем событие клика на кнопку удаления
                 deleteBtn.addEventListener('click', async () => {
-                    if (confirm(`Вы уверены, что хотите удалить ${user.name}?`)) {
+                    if (confirm(`Ви впевнені, що хочете видалити ${user.name}?`)) {
                         await deleteUser(user._id);
                     }
                 });
@@ -76,27 +138,26 @@
                 list.appendChild(li);
             });
         } catch (error) {
-            list.innerHTML = 'Ошибка подключения к серверу Node.js';
+            list.innerHTML = 'Помилка підключення до сервера Node.js';
             console.error(error);
         }
     }
 
-    // НОВАЯ ФУНКЦИЯ ДЛЯ УДАЛЕНИЯ СЕРВЕРОМ
+    // Функция для удаления сервера
     async function deleteUser(id) {
         try {
-            // Отправляем DELETE запрос с ID в самом адресе ссылки
             const response = await fetch(`${API_URL}/${id}`, {
                 method: 'DELETE'
             });
 
             if (response.ok) {
-                loadUsers(); // Перезагружаем список, чтобы увидеть изменения
+                loadUsers(); 
             } else {
-                alert('Не удалось удалить пользователя с сервера');
+                alert('Не вдалося видалити користувача з сервера');
             }
         } catch (error) {
-            console.error('Ошибка:', error);
-            alert('Произошла ошибка при попытке удаления');
+            console.error('Помилка:', error);
+            alert('Сталася помилка при спробі видалення');
         }
     }
 
@@ -104,8 +165,8 @@
     form.addEventListener('submit', async (e) => {
         e.preventDefault(); 
 
-        const name = document.getElementById('userName').value;
-        const job = document.getElementById('userJob').value;
+        const name = document.getElementById('userName').value.trim();
+        const job = document.getElementById('userJob').value; // Автоматически берет значение из select
 
         try {
             const response = await fetch(API_URL, {
@@ -117,9 +178,11 @@
             if (response.ok) {
                 form.reset(); 
                 loadUsers();  
+            } else {
+                alert('Помилка сервера при збереженні');
             }
         } catch (error) {
-            alert('Не удалось сохранить данные.');
+            alert('Не вдалося зберегти дані.');
         }
     });
 
@@ -129,6 +192,3 @@
 
 </body>
 </html>
-
-
-    <!-- <script src="./js/database.js"></script> -->

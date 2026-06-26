@@ -40,14 +40,44 @@ const User = mongoose.model('User', userSchema);
 // --- МАРШРУТЫ API ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ---
 
 // 1. Получить всех пользователей из базы
+// 1. Получить всех пользователей из базы с актуальной локацией за сегодня
 app.get('/api/users', async (req, res) => {
     try {
-        const users = await User.find();
-        res.json(users);
+        const users = await User.find().lean(); // .lean() преобразует документы Mongoose в обычные JS-объекты для легкого изменения
+        
+        // Получаем строковую дату сегодняшнего дня (ГГГГ-ММ-ДД)
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        // Получаем ВСЕ визиты за сегодняшний день
+        const todayVisits = await Visit.find({ dateString: todayStr });
+
+        // Для каждого пользователя ищем его последнюю сегодняшнюю отметку
+        const usersWithLocation = users.map(user => {
+            // Ищем визиты конкретно этого сотрудника за сегодня
+            const userTodayVisits = todayVisits.filter(v => v.userId && v.userId.toString() === user._id.toString());
+            
+            let lastLocation = 'Не відмічений'; // Статус по умолчанию, если сканов сегодня не было
+
+            if (userTodayVisits.length > 0) {
+                // Сортируем по времени сканирования (от самых свежих к старым)
+                userTodayVisits.sort((a, b) => new Date(b.scannedAt) - new Date(a.scannedAt));
+                // Берем имя объекта из самого последнего скана
+                lastLocation = userTodayVisits[0].objectName;
+            }
+
+            return {
+                ...user,
+                lastLocation // Добавляем новое динамическое поле в JSON-ответ
+            };
+        });
+
+        res.json(usersWithLocation);
     } catch (error) {
+        console.error('Ошибка при получении пользователей с локацией:', error);
         res.status(500).json({ message: 'Ошибка при получении данных' });
     }
 });
+
 
 // --- СХЕМА ДЛЯ АККАУНТОВ ПОЛЬЗОВАТЕЛЕЙ СИСТЕМЫ ---
 const accountSchema = new mongoose.Schema({
