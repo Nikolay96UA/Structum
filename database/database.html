@@ -69,6 +69,17 @@
 </div>
         
         <button type="submit">Сохранить в базу</button>
+
+        <!-- 🌟 БЛОК ДЛЯ ФИЛЬТРАЦИИ И ПОИСКА -->
+<div style="background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 600px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+    <input type="text" id="searchName" placeholder="🔍 Пошук за ім'ям..." style="flex: 1; min-width: 180px; margin: 0; padding: 8px;">
+    
+    <input type="text" id="searchJob" placeholder="🛠️ Пошук за посадою..." style="flex: 1; min-width: 150px; margin: 0; padding: 8px;">
+    
+    <input type="text" id="searchObject" placeholder="🏗️ Пошук за об'єктом..." style="flex: 1; min-width: 150px; margin: 0; padding: 8px;">
+</div>
+
+
     </form>
 
     <h2>Список користувачів в системі:</h2>
@@ -78,78 +89,105 @@
     const form = document.getElementById('userForm');
     const list = document.getElementById('usersList');
     const API_URL = 'https://structum.onrender.com/api/users';
+    
+    let allUsers = []; // 🌟 Глобальный массив для хранения оригинала списка пользователей
 
     // Функция для загрузки списка пользователей
     async function loadUsers() {
-        list.innerHTML = 'Загрузка...';
+        list.innerHTML = 'Завантаження...';
         try {
             const response = await fetch(API_URL);
-            const users = await response.json();
+            allUsers = await response.json(); // 🌟 Сохраняем полученные данные в глобальный массив
             
-            list.innerHTML = ''; 
-            
-            users.forEach((user, index) => {
-                const li = document.createElement('li');
-
-                // Текстовый блок (контейнер для имени, должности и бэйджа локации)
-                const infoDiv = document.createElement('div');
-                infoDiv.style.display = 'flex';
-                infoDiv.style.alignItems = 'center';
-                infoDiv.style.gap = '15px';
-                infoDiv.style.flexWrap = 'wrap';
-
-                // Основной текст (Имя и Должность)
-                const mainText = document.createElement('span');
-                mainText.textContent = `№${index + 1} | ${user.name} (${user.job})`;
-                infoDiv.appendChild(mainText);
-
-                // 🌟 ЦВЕТНОЙ ИНДИКАТОР АКТУАЛЬНОЙ ЛОКАЦИИ ЗА СЕГОДНЯ
-                                // 🌟 ОБНОВЛЕННЫЙ ЦВЕТНОЙ ИНДИКАТОР ЛОКАЦИИ
-                const locationBadge = document.createElement('span');
-                locationBadge.style.fontSize = '12px';
-                locationBadge.style.fontWeight = 'bold';
-                locationBadge.style.padding = '4px 10px';
-                locationBadge.style.borderRadius = '20px';
-                
-                // Проверяем, был ли сотрудник сегодня на работе
-                if (user.isScannedToday) {
-                    // Сегодня на объекте — зеленый индикатор
-                    locationBadge.textContent = `🟢 Сьогодні на: ${user.lastLocation}`;
-                    locationBadge.style.backgroundColor = '#d4edda';
-                    locationBadge.style.color = '#155724';
-                } else {
-                    // Сегодня нет, но показываем, где он был в последний раз — красный индикатор
-                    if (user.lastLocation === 'Немає відміток') {
-                        locationBadge.textContent = '🔴 Не відмічений взагалі';
-                    } else {
-                        locationBadge.textContent = `🔴 Сьогодні ніде (остання: ${user.lastLocation})`;
-                    }
-                    locationBadge.style.backgroundColor = '#f8d7da';
-                    locationBadge.style.color = '#721c24';
-                }
-                
-                infoDiv.appendChild(locationBadge);
-
-                li.appendChild(infoDiv);
-
-                // Кнопка удаления (увольнения)
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'Звільнений';
-                deleteBtn.className = 'btn-delete';
-
-                deleteBtn.addEventListener('click', async () => {
-                    if (confirm(`Ви впевнені, що хочете видалити ${user.name}?`)) {
-                        await deleteUser(user._id);
-                    }
-                });
-
-                li.appendChild(deleteBtn);
-                list.appendChild(li);
-            });
+            renderUsers(allUsers); // 🌟 Вызываем функцию отрисовки для всего списка
         } catch (error) {
             list.innerHTML = 'Помилка підключення до сервера Node.js';
             console.error(error);
         }
+    }
+
+    // 🌟 ФУНКЦИЯ ДЛЯ ОТРИСОВКИ СПИСКА (РАБОТАЕТ И ДЛЯ СТАНДАРТНОГО СПИСКА, И ДЛЯ ФИЛЬТРОВ)
+    function renderUsers(usersToRender) {
+        list.innerHTML = ''; 
+        
+        if (usersToRender.length === 0) {
+            list.innerHTML = '<li style="color: #999; justify-content: center; background: white; padding: 12px 15px; border-radius: 4px;">Нікого не знайдено за такими критеріями</li>';
+            return;
+        }
+        
+        usersToRender.forEach((user, index) => {
+            const li = document.createElement('li');
+
+            // Текстовый блок (контейнер для имени, должности и бэйджа локации)
+            const infoDiv = document.createElement('div');
+            infoDiv.style.display = 'flex';
+            infoDiv.style.alignItems = 'center';
+            infoDiv.style.gap = '15px';
+            infoDiv.style.flexWrap = 'wrap';
+
+            // Основной текст (Имя и Должность)
+            const mainText = document.createElement('span');
+            mainText.textContent = `№${index + 1} | ${user.name} (${user.job})`;
+            infoDiv.appendChild(mainText);
+
+            // 🌟 ОБНОВЛЕННЫЙ ЦВЕТНОЙ ИНДИКАТОР ЛОКАЦИИ
+            const locationBadge = document.createElement('span');
+            locationBadge.style.fontSize = '12px';
+            locationBadge.style.fontWeight = 'bold';
+            locationBadge.style.padding = '4px 10px';
+            locationBadge.style.borderRadius = '20px';
+            
+            // Проверяем, был ли сотрудник сегодня на работе
+            if (user.isScannedToday) {
+                // Сегодня на объекте — зеленый индикатор
+                locationBadge.textContent = `🟢 Сьогодні на: ${user.lastLocation}`;
+                locationBadge.style.backgroundColor = '#d4edda';
+                locationBadge.style.color = '#155724';
+            } else {
+                // Сегодня нет, но показываем, где он был в последний раз — красный индикатор
+                if (user.lastLocation === 'Немає відміток') {
+                    locationBadge.textContent = '🔴 Не відмічений взагалі';
+                } else {
+                    locationBadge.textContent = `🔴 Сьогодні ніде (остання: ${user.lastLocation})`;
+                }
+                locationBadge.style.backgroundColor = '#f8d7da';
+                locationBadge.style.color = '#721c24';
+            }
+            
+            infoDiv.appendChild(locationBadge);
+            li.appendChild(infoDiv);
+
+            // Кнопка удаления (увольнения)
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Звільнений';
+            deleteBtn.className = 'btn-delete';
+
+            deleteBtn.addEventListener('click', async () => {
+                if (confirm(`Ви впевнені, що хочете видалити ${user.name}?`)) {
+                    await deleteUser(user._id);
+                }
+            });
+
+            li.appendChild(deleteBtn);
+            list.appendChild(li);
+        });
+    }
+
+    // 🌟 ФУНКЦИЯ ЖИВОЙ ФИЛЬТРАЦИИ НА КЛИЕНТЕ
+    function filterUsers() {
+        const nameQuery = document.getElementById('searchName') ? document.getElementById('searchName').value.toLowerCase().trim() : '';
+        const jobQuery = document.getElementById('searchJob') ? document.getElementById('searchJob').value.toLowerCase().trim() : '';
+        const objectQuery = document.getElementById('searchObject') ? document.getElementById('searchObject').value.toLowerCase().trim() : '';
+
+        const filtered = allUsers.filter(user => {
+            const matchesName = user.name ? user.name.toLowerCase().includes(nameQuery) : false;
+            const matchesJob = user.job ? user.job.toLowerCase().includes(jobQuery) : false;
+            const matchesObject = user.lastLocation ? user.lastLocation.toLowerCase().includes(objectQuery) : false;
+
+            return matchesName && matchesJob && matchesObject;
+        });
+
+        renderUsers(filtered);
     }
 
     // Функция для удаления сервера
@@ -195,9 +233,21 @@
         }
     });
 
+    // 🌟 НАВЕШИВАЕМ СЛУШАТЕЛИ СОБЫТИЙ ПОСЛЕ ЗАГРУЗКИ ДОКУМЕНТА
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchNameInput = document.getElementById('searchName');
+        const searchJobInput = document.getElementById('searchJob');
+        const searchObjectInput = document.getElementById('searchObject');
+
+        if (searchNameInput) searchNameInput.addEventListener('input', filterUsers);
+        if (searchJobInput) searchJobInput.addEventListener('input', filterUsers);
+        if (searchObjectInput) searchObjectInput.addEventListener('input', filterUsers);
+    });
+
     // Загружаем пользователей сразу при открытии страницы
     loadUsers();
 </script>
+
 
 </body>
 </html>
