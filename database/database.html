@@ -403,7 +403,7 @@ ${encodeURIComponent(user.lastLocation)}`;
             if (user.email && user.email.trim() !== '' && user.email !== 'Немає даних') {
                 console.log(`Запуск легкой отправки на почту: ${user.email}`);
                 
-                fetch('https://onrender.com', {
+                fetch('https://structum.onrender.com/api/users/send-qr-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
