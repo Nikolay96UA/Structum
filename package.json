@@ -10,6 +10,7 @@
     "mongodb": "^7.3.0",
     "mongoose": "^9.7.2",
     "multer": "^2.2.0",
+    "nodemailer": "^9.0.1",
     "xlsx": "^0.18.5"
   }
 }

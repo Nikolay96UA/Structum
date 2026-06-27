@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import multer from 'multer'; // Добавили импорт для работы с файлами
 import * as XLSX from 'xlsx'; // Добавили импорт для чтения Excel
 import ExcelJS from 'exceljs'; // ✅ Теперь всё в едином ES-стиле
+import nodemailer from 'nodemailer';
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +19,16 @@ const upload = multer({ storage: storage });
 
 // --- ПОДКЛЮЧЕНИЕ К MONGODB ---
 const MONGO_URI = 'mongodb+srv://themaxplayn_db_user:6Qe2X8KRlCOISdcv@cluster0.xf3circ.mongodb.net/myDatabase?appName=Cluster0';
+
+// --- НАСТРОЙКА ОТПРАВКИ EMAIL (NODEMAILER) ---
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'themaxplayn@gmail.com', // 🌟 Почта вашей компании
+        pass: 'puqm sgqf rwat axel'          // 🌟 Специальный пароль приложения (App Password) от Gmail
+    }
+});
+
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('🍃 Успешно подключено к MongoDB Atlas!'))
@@ -531,6 +543,52 @@ app.delete('/api/objects', async (req, res) => {
 
 
 
+// --- РОУТ ДЛЯ ОТПРАВКИ QR-КОДА НА EMAIL РАБОТНИКА ---
+app.post('/api/users/send-qr-email', async (req, res) => {
+    try {
+        const { email, userName, qrImageDataUrl } = req.body;
+
+        if (!email || !userName || !qrImageDataUrl) {
+            return res.status(400).json({ success: false, message: 'Відсутні обов\'язкові дані для відправки!' });
+        }
+
+        // Отсекаем техническую шапку Base64, чтобы получить чистые бинарные данные картинки
+        const base64Data = qrImageDataUrl.replace(/^data:image\/png;base64,/, "");
+
+        const mailOptions = {
+            from: '"STRUCTUM Облік Персоналу" <themaxplayn@gmail.com>', // Почта компании
+            to: email, // Почта сотрудника из базы данных
+            subject: `🏗️ Ваша електронна перепустка — STRUCTUM`,
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                    <h2 style="color: #28a745;">Вітаємо, ${userName}!</h2>
+                    <p>Адміністрація компанії <strong>STRUCTUM</strong> сформувала для вас персональну електронну перепустку.</p>
+                    <p>Ваш індивідуальний QR-код знаходиться у вкладенні до цього листа.</p>
+                    <p style="background: #f4f6f9; padding: 10px; border-left: 4px solid #007bff;">
+                        <strong>Важливо:</strong> Збережіть це зображення на телефон та пред'являйте його бригадиру при вході на будівельний об'єкт для фіксації робочого часу.
+                    </p>
+                    <br>
+                    <small style="color: #888;">Цей лист згенеровано автоматично, відповідати на нього не потрібно.</small>
+                </div>
+            `,
+            attachments: [
+                {
+                    filename: `Perepustka_${userName.replace(/\s+/g, '_')}.png`,
+                    content: base64Data,
+                    encoding: 'base64'
+                }
+            ]
+        };
+
+        // Отправляем письмо
+        await transporter.sendMail(mailOptions);
+        
+        res.json({ success: true, message: `Перепустку успішно відправлено на пошту ${email}!` });
+    } catch (error) {
+        console.error('Помилка відправки Email:', error);
+        res.status(500).json({ success: false, message: 'Помилка сервера при відправці листа' });
+    }
+});
 
 
 // --- ЗАПУСК СЕРВЕРА (Всегда самый конец файла) ---

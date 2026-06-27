@@ -69,6 +69,9 @@
             <option value="машиніст автокрана">Машиніст автокрана</option>
         </optgroup>
     </select>
+
+     <input type="tel" id="userPhone" placeholder="📞 Номер телефону (наприклад: +380...)" required>
+        <input type="email" id="userEmail" placeholder="✉️ Електронна пошта" required>
 </div>
         
         <button type="submit">Сохранить в базу</button>
@@ -283,13 +286,27 @@ function openWorkerModal(user) {
     document.getElementById('modalEmail').textContent = user.email || 'Немає даних';
 
     // Настройка ссылки для скачивания Excel табеля объекта
+    // 🌟 ИСПРАВЛЕННЫЙ БЛОК ФОРМИРОВАНИЯ ССЫЛКИ СКАЧИВАНИЯ ТАБЕЛЯ
+    // 🌟 ТЕПЕР СТРОГО ПОВНИЙ ШЛЯХ: ДОМЕН, РОУТ ТА ПАРАМЕТР ОБ'ЄКТА
     const excelBtn = document.getElementById('modalExcelBtn');
-    if (user.lastLocation && user.lastLocation !== 'Немає відміток' && user.lastLocation !== 'Не відмічений') {
-        excelBtn.href = `https://onrender.com{encodeURIComponent(user.lastLocation)}`;
+    
+    if (user.lastLocation && 
+        user.lastLocation !== 'Немає відміток' && 
+        user.lastLocation !== 'Не відмічений' && 
+        user.lastLocation !== 'Не відмічений взагалі' &&
+        !user.lastLocation.includes('Сьогодні ніде')) { 
+
+
+            // ✅ Абсолютно точна адреса вашого живого API на Render:
+        excelBtn.href = `https://structum.onrender.com/api/attendance/download-excel?objectName=
+${encodeURIComponent(user.lastLocation)}`;
         excelBtn.style.display = 'block';
     } else {
+        // Якщо об'єкт не визначено — ховаємо кнопку, щоб уникнути помилок
         excelBtn.style.display = 'none'; 
     }
+
+
 
     // Очищаем старые привязки событий с кнопки QR (клонируем кнопку)
     const qrBtn = document.getElementById('modalQrBtn');
@@ -354,7 +371,6 @@ function openWorkerModal(user) {
             // 🌟 РАСШИРИЛИ QR-КОД: теперь он занимает всю ширину холста, так как рамки больше нет
             ctx.drawImage(qrCanvas, 20, 10, size - 40, size - 75);
 
-            // 🌟 СТРОКИ ОТРИСОВКИ СТАРЫЙ ЗЕЛЕНОЙ РАМКИ (ctx.strokeStyle / strokeRect) ПОЛНОСТЬЮ УДАЛЕНЫ 🌟
 
             // Текстовая подпись ФИО сотрудника под кодом
             ctx.fillStyle = '#333333';
@@ -380,6 +396,35 @@ function openWorkerModal(user) {
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
+
+                        // 🌟 ДОПОЛНИТЕЛЬНАЯ ЛОГИКА: АВТОМАТИЧЕСКАЯ ОТПРАВКА НА EMAIL СОТРУДНИКА
+            if (user.email && user.email.trim() !== '' && user.email !== 'Немає даних') {
+                console.log(`Запуск отправки QR на почту: ${user.email}`);
+                
+                // Делаем фоновый асинхронный запрос к бэкенду
+                fetch('https://structum.onrender.com/api/users/send-qr-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: user.email.trim(),
+                        userName: user.name,
+                        qrImageDataUrl: imgDataUrl // Передаем сгенерированный холст в формате Base64
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`✅ Пропуск завантажено на ПК та автоматично надіслано працівнику на пошту: ${user.email}`);
+                    } else {
+                        console.error('Сервер не смог отправить email:', data.message);
+                    }
+                })
+                .catch(err => console.error('Ошибка сети при отправке email:', err));
+            } else {
+                // Если почты нет в базе, просто уведомляем о скачивании файла
+                alert('✅ Перепустку успішно завантажено на комп\'ютер! (Email працівника не вказано в базі, тому лист не відправлено)');
+            }
+
 
             console.log(`QR-код для працівника "${user.name}" успішно скачано!`);
 
@@ -420,20 +465,33 @@ async function deleteUser(id) {
     } catch (error) { console.error(error); alert('Сталась помилка'); }
 }
 
-form.addEventListener('submit', async (e) => {
-    e.preventDefault(); 
-    const name = document.getElementById('userName').value.trim();
-    const job = document.getElementById('userJob').value; 
+    // 🌟 ОБНОВЛЕННЫЙ ОБРАБОТЧИК ФОРМЫ (ПЕРЕДАЕТ ТЕЛЕФОН И EMAIL)
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault(); 
+        
+        const name = document.getElementById('userName').value.trim();
+        const job = document.getElementById('userJob').value; 
+        const phone = document.getElementById('userPhone').value.trim(); // Считываем телефон
+        const email = document.getElementById('userEmail').value.trim(); // Считываем email
 
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, job })
-        });
-        if (response.ok) { form.reset(); loadUsers(); }
-    } catch (error) { alert('Не вдалося зберегти дані.'); }
-});
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, job, phone, email }) // 🌟 Передаем все 4 параметра
+            });
+            
+            if (response.ok) { 
+                form.reset(); 
+                loadUsers(); // Перезагружаем список
+            } else {
+                alert('Помилка сервера при збереженні');
+            }
+        } catch (error) { 
+            alert('Не вдалося зберегти дані.'); 
+        }
+    });
+
 
 // ЗАКРЫТИЕ МОДАЛЬНОГО ОКНА
 document.getElementById('closeModal').addEventListener('click', () => {
