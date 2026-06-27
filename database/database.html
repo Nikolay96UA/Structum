@@ -140,9 +140,7 @@
                 📱 Згенерувати QR-код перепустки
             </button>
 
-            <!-- <button id="modalQrBtn" class="btn-action" style="display: block; text-align: center; background: #007bff; color: white; padding: 12px; border-radius: 4px; border: none; font-weight: bold; width: 100%; cursor: pointer;">
-    📥 Скачати QR-код перепустки
-</button> -->
+
 
 <!-- Скрытый невидимый блок, где скрипт будет тайно создавать картинку QR-кода для скачивания -->
 <div id="hiddenQrContainer" style="display: none;"></div>
@@ -273,64 +271,10 @@
         });
     }
 
-// 🌟 ФУНКЦИЯ ОТКРЫТИЯ МОДАЛЬНОГО ОКНА КАРТОЧКИ С АВТОСКАЧИВАНИЕМ QR ЧЕРЕЗ API
-// 🌟 АВТОНОМНАЯ ФУНКЦИЯ КАРТОЧКИ С ЛОКАЛЬНОЙ ГЕНЕРАЦИЕЙ QR-КОДА
-// 🌟 АВТОНОМНАЯ ФУНКЦИЯ КАРТОЧКИ С ВСТРОЕННЫМ ЛОКАЛЬНЫМ ГЕНЕРАТОРОМ QR (БЕЗ ИНТЕРНЕТА)
-// 🌟 МИНИ-ДВИЖОК НАСТОЯЩЕГО QR-КОДА (Работает автономно, без интернета и внешних файлов)
-const NativeQR = {
-    generateMatrix: function(text) {
-        // Упрощенный, но абсолютно точный и уникальный генератор QR-матрицы стандарта Type 4 (25x25)
-        const size = 25;
-        const matrix = Array(size).fill().map(() => Array(size).fill(0));
-        
-        // Рисуем 3 обязательных поисковых квадрата по углам
-        const drawFinder = (x, y) => {
-            for (let r = 0; r < 7; r++) {
-                for (let c = 0; c < 7; c++) {
-                    const isBorder = r === 0 || r === 6 || c === 0 || c === 6;
-                    const isCenter = r >= 2 && r <= 4 && c >= 2 && c <= 4;
-                    if (isBorder || isCenter) matrix[y + r][x + c] = 1;
-                }
-            }
-        };
-        drawFinder(0, 0); drawFinder(size - 7, 0); drawFinder(0, size - 7);
 
-        // Синхронизирующая линия между квадратами
-        for (let i = 8; i < size - 8; i++) {
-            if (i % 2 === 0) { matrix[6][i] = 1; matrix[i][6] = 1; }
-        }
-
-        // Побитовое кодирование уникального ID сотрудника в тело матрицы
-        let bitIndex = 0;
-        const bits = [];
-        for (let i = 0; i < text.length; i++) {
-            const code = text.charCodeAt(i);
-            for (let b = 7; b >= 0; b--) bits.push((code >> b) & 1);
-        }
-
-        // Заполняем свободную зону матрицы битами данных
-        for (let c = size - 1; c >= 0; c--) {
-            for (let r = 0; r < size; r++) {
-                // Пропускаем зоны поисковых квадратов
-                if ((r < 8 && c < 8) || (r < 8 && c > size - 9) || (r > size - 9 && c < 8)) continue;
-                if (r === 6 || c === 6) continue; // Пропускаем линии синхронизации
-
-                // Если биты данных закончились, используем хэш-маску от ID для уникального узора
-                if (bitIndex < bits.length) {
-                    matrix[r][c] = bits[bitIndex++];
-                } else {
-                    const mask = (r + c) % 2 === 0;
-                    const pseudoRandom = Math.abs(Math.sin(text.charCodeAt(bitIndex % text.length) + r * 17 + c * 31));
-                    matrix[r][c] = pseudoRandom > 0.5 ? (mask ? 1 : 0) : (mask ? 0 : 1);
-                    bitIndex++;
-                }
-            }
-        }
-        return matrix;
-    }
-};
 
 // 🌟 ОБНОВЛЕННАЯ ФУНКЦИЯ КАРТОЧКИ — С ГЕНЕРАЦИЕЙ 100% УНИКАЛЬНЫХ И НАСТОЯЩИХ QR
+// 🌟 АДАПТИРОВАННАЯ ФУНКЦИЯ КАРТОЧКИ С ТВОИМ ГЕНЕРАТОРОМ QRious И АВТОСКАЧИВАНИЕМ
 function openWorkerModal(user) {
     document.getElementById('modalName').textContent = user.name || 'Не вказано';
     document.getElementById('modalJob').textContent = user.job || 'Не вказано';
@@ -338,6 +282,7 @@ function openWorkerModal(user) {
     document.getElementById('modalPhone').textContent = user.phone || 'Немає даних';
     document.getElementById('modalEmail').textContent = user.email || 'Немає даних';
 
+    // Настройка ссылки для скачивания Excel табеля объекта
     const excelBtn = document.getElementById('modalExcelBtn');
     if (user.lastLocation && user.lastLocation !== 'Немає відміток' && user.lastLocation !== 'Не відмічений') {
         excelBtn.href = `https://onrender.com{encodeURIComponent(user.lastLocation)}`;
@@ -346,68 +291,86 @@ function openWorkerModal(user) {
         excelBtn.style.display = 'none'; 
     }
 
+    // Очищаем старые привязки событий с кнопки QR (клонируем кнопку)
     const qrBtn = document.getElementById('modalQrBtn');
     const newQrBtn = qrBtn.cloneNode(true);
     qrBtn.parentNode.replaceChild(newQrBtn, qrBtn);
 
-    // Клик на скачивание уникального пропуска
-    newQrBtn.addEventListener('click', () => {
+    // 1. Твоя функция принудительной загрузки библиотеки QRious
+    const ensureQRiousLoaded = () => {
+        return new Promise((resolve, reject) => {
+            if (typeof QRious !== 'undefined') {
+                resolve();
+                return;
+            }
+            console.warn("Бібліотека QRious не знайдена в HTML. Завантажуємо примусово...");
+            const script = document.createElement('script');
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js";
+            script.onload = () => {
+                console.log("Бібліотека QRious успішно імпортована!");
+                resolve();
+            };
+            script.onerror = () => reject(new Error("Не вдалося завантажити бібліотеку QRious з сервера CDN."));
+            document.head.appendChild(script);
+        });
+    };
+
+    // 2. Логика генерации и мгновенного автоматического скачивания файла
+    newQrBtn.addEventListener('click', async () => {
         if (!user._id) {
             alert('Помилка: У працівника відсутній ID в базі даних!');
             return;
         }
 
         try {
-            const canvas = document.createElement('canvas');
-            const size = 500; // Высокое разрешение для четкой печати
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
+            // Проверяем/подгружаем библиотеку перед выполнением кода
+            await ensureQRiousLoaded();
 
-            // Белый фон
+            // Создаем виртуальный холст (canvas) в памяти браузера для отрисовки кода
+            const qrCanvas = document.createElement('canvas');
+            const size = 500; // Разрешение 500x500 для идеального качества печати
+
+            // Твой оригинальный код отрисовки QRious
+            new QRious({
+                element: qrCanvas,
+                value: user._id.toString(), // Вшиваем 24-значный ID сотрудника
+                size: size,
+                level: 'H', // Высокий уровень коррекции ошибок
+                background: 'white',
+                foreground: 'black'
+            });
+
+            // --- БЛОК ОФОРМЛЕНИЯ ПЕРЕПУСТКИ ---
+                       // --- БЛОК ОФОРМЛЕНИЯ ПЕРЕПУСТКИ (УБРАЛИ ЗЕЛЕНУЮ РАМКУ) ---
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = size;
+            finalCanvas.height = size;
+            const ctx = finalCanvas.getContext('2d');
+
+            // Белый фон бланка
             ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(0, 0, size, size);
 
-            const text = user._id.toString();
-            
-            // Генерируем уникальную матрицу именно для ЭТОГО ID
-            const matrix = NativeQR.generateMatrix(text);
-            const matrixSize = matrix.length;
-            const padding = 50;
-            const cellSize = (size - padding * 2) / matrixSize;
+            // 🌟 РАСШИРИЛИ QR-КОД: теперь он занимает всю ширину холста, так как рамки больше нет
+            ctx.drawImage(qrCanvas, 20, 10, size - 40, size - 75);
 
-            // Рисуем пиксели на холсте на основе матрицы
-            ctx.fillStyle = '#000000';
-            for (let r = 0; r < matrixSize; r++) {
-                for (let c = 0; c < matrixSize; c++) {
-                    if (matrix[r][c] === 1) {
-                        ctx.fillRect(
-                            padding + c * cellSize, 
-                            padding + r * cellSize, 
-                            cellSize + 0.5, // Небольшой нахлест, чтобы не было белых микро-сеток
-                            cellSize + 0.5
-                        );
-                    }
-                }
-            }
+            // 🌟 СТРОКИ ОТРИСОВКИ СТАРЫЙ ЗЕЛЕНОЙ РАМКИ (ctx.strokeStyle / strokeRect) ПОЛНОСТЬЮ УДАЛЕНЫ 🌟
 
-            // Добавляем красивую рамку вокруг кода
-            ctx.strokeStyle = '#28a745'; // Фирменный зеленый цвет STRUCTUM
-            ctx.lineWidth = 4;
-            ctx.strokeRect(15, 15, size - 30, size - 30);
-
-            // Текстовая подпись внизу пропуска
+            // Текстовая подпись ФИО сотрудника под кодом
             ctx.fillStyle = '#333333';
-            ctx.font = 'bold 14px Arial';
+            ctx.font = 'bold 16px Arial'; // Сделали шрифт чуть крупнее и контрастнее
             ctx.textAlign = 'center';
-            ctx.fillText(user.name || 'ПЕРЕПУСТКА', size / 2, size - 25);
+            ctx.fillText(user.name || 'ПЕРЕПУСТКА', size / 2, size - 30);
             
             ctx.fillStyle = '#888888';
-            ctx.font = '10px Arial';
-            ctx.fillText(`ID: ${text}`, size / 2, size - 10);
+            ctx.font = '11px Arial';
+            ctx.fillText(`ID: ${user._id.toString()}`, size / 2, size - 12);
 
-            // Мгновенная загрузка графического файла в браузер
-            const imgDataUrl = canvas.toDataURL('image/png');
+
+            // Превращаем холст в скачиваемую PNG-картинку
+            const imgDataUrl = finalCanvas.toDataURL('image/png');
+
+            // Эмулируем клик для автоматического скачивания в браузер
             const downloadLink = document.createElement('a');
             downloadLink.href = imgDataUrl;
             
@@ -418,14 +381,18 @@ function openWorkerModal(user) {
             downloadLink.click();
             document.body.removeChild(downloadLink);
 
+            console.log(`QR-код для працівника "${user.name}" успішно скачано!`);
+
         } catch (error) {
             console.error(error);
-            alert('Помилка генерації файлу перепустки.');
+            alert(error.message || 'Помилка генерації QR-коду.');
         }
     });
 
+    // Открываем модальное окно на экране
     document.getElementById('workerModal').style.display = 'flex';
 }
+
 
 function filterUsers() {
     const nameQuery = document.getElementById('searchName').value.toLowerCase().trim();
