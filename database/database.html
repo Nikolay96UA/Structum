@@ -334,105 +334,90 @@ ${encodeURIComponent(user.lastLocation)}`;
 
     // 2. Логика генерации и мгновенного автоматического скачивания файла
     newQrBtn.addEventListener('click', async () => {
-        if (!user._id) {
-            alert('Помилка: У працівника відсутній ID в базі даних!');
-            return;
-        }
+    if (!user._id) {
+        alert('Помилка: У працівника відсутній ID в базі даних!');
+        return;
+    }
 
-        try {
-            // Проверяем/подгружаем библиотеку перед выполнением кода
-            await ensureQRiousLoaded();
+    try {
+        await ensureQRiousLoaded();
 
-            // Создаем виртуальный холст (canvas) в памяти браузера для отрисовки кода
-            const qrCanvas = document.createElement('canvas');
-            const size = 500; // Разрешение 500x500 для идеального качества печати
+        const qrCanvas = document.createElement('canvas');
+        const size = 500;
 
-            // Твой оригинальный код отрисовки QRious
-            new QRious({
-                element: qrCanvas,
-                value: user._id.toString(), // Вшиваем 24-значный ID сотрудника
-                size: size,
-                level: 'H', // Высокий уровень коррекции ошибок
-                background: 'white',
-                foreground: 'black'
-            });
+        // Генерация QR
+        new QRious({
+            element: qrCanvas,
+            value: user._id.toString(),
+            size: size,
+            level: 'H',
+            background: 'white',
+            foreground: 'black'
+        });
 
-            // --- БЛОК ОФОРМЛЕНИЯ ПЕРЕПУСТКИ ---
-                       // --- БЛОК ОФОРМЛЕНИЯ ПЕРЕПУСТКИ (УБРАЛИ ЗЕЛЕНУЮ РАМКУ) ---
-            const finalCanvas = document.createElement('canvas');
-            finalCanvas.width = size;
-            finalCanvas.height = size;
-            const ctx = finalCanvas.getContext('2d');
+        // Финальный холст (пропуск)
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = size;
+        finalCanvas.height = size;
+        const ctx = finalCanvas.getContext('2d');
 
-            // Белый фон бланка
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, size, size);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, size, size);
 
-            // 🌟 РАСШИРИЛИ QR-КОД: теперь он занимает всю ширину холста, так как рамки больше нет
-            ctx.drawImage(qrCanvas, 20, 10, size - 40, size - 75);
+        ctx.drawImage(qrCanvas, 20, 10, size - 40, size - 75);
 
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(user.name || 'ПЕРЕПУСТКА', size / 2, size - 30);
 
-            // Текстовая подпись ФИО сотрудника под кодом
-            ctx.fillStyle = '#333333';
-            ctx.font = 'bold 16px Arial'; // Сделали шрифт чуть крупнее и контрастнее
-            ctx.textAlign = 'center';
-            ctx.fillText(user.name || 'ПЕРЕПУСТКА', size / 2, size - 30);
-            
-            ctx.fillStyle = '#888888';
-            ctx.font = '11px Arial';
-            ctx.fillText(`ID: ${user._id.toString()}`, size / 2, size - 12);
+        ctx.fillStyle = '#888';
+        ctx.font = '11px Arial';
+        ctx.fillText(`ID: ${user._id.toString()}`, size / 2, size - 12);
 
+        // PNG скачивание
+        const imgDataUrl = finalCanvas.toDataURL('image/png');
 
-            // Превращаем холст в скачиваемую PNG-картинку
-            const imgDataUrl = finalCanvas.toDataURL('image/png');
+        const downloadLink = document.createElement('a');
+        downloadLink.href = imgDataUrl;
 
-            // Эмулируем клик для автоматического скачивания в браузер
-            const downloadLink = document.createElement('a');
-            downloadLink.href = imgDataUrl;
-            
-            const safeName = (user.name || 'worker').replace(/\s+/g, '_');
-            downloadLink.download = `Перепустка_${safeName}.png`;
-            
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
+        const safeName = (user.name || 'worker').replace(/\s+/g, '_');
+        downloadLink.download = `Перепустка_${safeName}.png`;
 
-                        // 🌟 ДОПОЛНИТЕЛЬНАЯ ЛОГИКА: АВТОМАТИЧЕСКАЯ ОТПРАВКА НА EMAIL СОТРУДНИКА
-           
-            // 🌟 ОБНОВЛЕННАЯ ЛЕГКАЯ ОТПРАВКА НА ПОЧТУ БЕЗ ТЯЖЕЛЫХ КАРТИНОК
-            if (user.email && user.email.trim() !== '' && user.email !== 'Немає даних') {
-                console.log(`Запуск легкой отправки на почту: ${user.email}`);
-                
-                fetch('https://structum.onrender.com/api/users/send-qr-email', {
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        console.log(`QR-код для "${user.name}" скачано`);
+
+        // 📧 ОТПРАВКА EMAIL (АВТОМАТИЧЕСКИ)
+        if (user.email) {
+            try {
+                await fetch('https://structum.onrender.com/api/users/send-qr-email', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
-                        email: user.email.trim(),
+                        email: user.email,
                         userName: user.name,
-                        userId: user._id // 🌟 Передаем чистый ID для формирования ссылки в письме
+                        userId: user._id
                     })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(`✅ Перепустку завантажено на ПК та автоматично надіслано працівнику на пошту: ${user.email}`);
-                    } else {
-                        console.error('Помилка отправки:', data.message);
-                    }
-                })
-                .catch(err => console.error('Помилка мережі:', err));
-            } else {
-                alert('✅ Перепустку успішно завантажено на комп\'ютер! (Email працівника не вказано)');
+                });
+
+                console.log(`📧 Email отправлен на ${user.email}`);
+            } catch (err) {
+                console.error('Ошибка отправки email:', err);
             }
-
-
-            console.log(`QR-код для працівника "${user.name}" успішно скачано!`);
-
-        } catch (error) {
-            console.error(error);
-            alert(error.message || 'Помилка генерації QR-коду.');
+        } else {
+            console.warn('Email отсутствует у пользователя');
         }
-    });
+
+    } catch (error) {
+        console.error(error);
+        alert(error.message || 'Помилка генерації QR-коду.');
+    }
+});
 
     // Открываем модальное окно на экране
     document.getElementById('workerModal').style.display = 'flex';
@@ -471,7 +456,7 @@ async function deleteUser(id) {
         
         const name = document.getElementById('userName').value.trim();
         const job = document.getElementById('userJob').value; 
-        const phone = document.getElementById('userPhone').value.trim(); // Считываем телефон
+        const phone = document.getElementById('userPhone').value.trim(); // Считываем 
         const email = document.getElementById('userEmail').value.trim(); // Считываем email
 
         try {

@@ -20,84 +20,64 @@ const upload = multer({ storage: storage });
 // --- ПОДКЛЮЧЕНИЕ К MONGODB ---
 const MONGO_URI = 'mongodb+srv://themaxplayn_db_user:6Qe2X8KRlCOISdcv@cluster0.xf3circ.mongodb.net/myDatabase?appName=Cluster0';
 
-// --- НАСТРОЙКА ОТПРАВКИ EMAIL (NODEMAILER) ---
 
 // --- НАДЕЖНЫЙ РОУТ ОТПРАВКИ ТЕКСТОВОГО ПИСЬМА СО ССЫЛКОЙ НА ПРОПУСК ---
 app.post('/api/users/send-qr-email', async (req, res) => {
     try {
-        const { email, userName } = req.body;
+        const { email, userName, userId } = req.body;
 
-        if (!email || !userName) {
-            return res.status(400).json({ success: false, message: 'Відсутні обов\'язкові дані для відправки!' });
+        if (!email || !userName || !userId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Не хватает данных'
+            });
         }
 
-        const RESEND_API_KEY = "re_9ks7THyM_C7hnQ78hwTGSvi19spksc3o4"; 
+        const RESEND_API_KEY = "re_9ks7THyM_C7hnQ78hwTGSvi19spksc3o4";
 
-        console.log(`Запуск отправки письма через HTTP API на адрес ${email}...`);
-
-        // 🌟 Теперь отправляем СТРОГО чистый легкий текст. Vercel пропустит его мгновенно!
-        const response = await fetch('https://resend.com', {
+        const response = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${RESEND_API_KEY}`,
                 'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0'
             },
             body: JSON.stringify({
-                from: 'onboarding@resend.dev', 
-                to: [email], 
-                subject: '🏗️ Ваша електронна перепустка — STRUCTUM',
+                from: 'STRUCTUM <onboarding@resend.dev>',
+                to: [email],
+                subject: '🏗️ Ваша перепустка STRUCTUM',
                 html: `
-                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 500px; margin: 0 auto; border: 1px solid #e1e4e8; border-radius: 8px;">
-                        <h2 style="color: #28a745; border-bottom: 2px solid #28a745; padding-bottom: 10px;">Вітаємо, ${userName}!</h2>
-                        <p>Адміністрація компанії <strong>STRUCTUM</strong> сформувала для вас персональну електронну перепустку.</p>
-                        <p>Для того щоб зберегти перепустку з вашим індивідуальним QR-кодом на телефон, натисніть на кнопку нижче:</p>
-                        
-                        <div style="margin: 25px 0; text-align: center;">
-                            <!-- 🌟 Ссылка ведет на твой генератор, который мы делали в самом начале, передавая ID -->
-                            <a href="https://onrender.com{req.body.userId || ''}" style="display: inline-block; background: #28a745; color: white; padding: 12px 25px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 16px;">
-                                📥 Завантажити перепустку QR
-                            </a>
-                        </div>
+                    <div style="font-family:Arial;padding:20px">
+                        <h2>Вітаємо, ${userName}</h2>
 
-                        <p style="background: #f4f6f9; padding: 12px; border-left: 4px solid #007bff; margin: 20px 0; font-size: 14px;">
-                            <strong>Важливо:</strong> Після завантаження збережіть зображення на телефон та пред'являйте його бригадиру при вході на об'єкт для фіксації робочого часу.
-                        </p>
-                        <br>
-                        <small style="color: #888; display: block; border-top: 1px solid #e1e4e8; padding-top: 10px;">Цей лист згенеровано автоматично системою STRUCTUM.</small>
+                        <p>Ваша електронна перепустка готова.</p>
+
+                        <p>QR-код можна переглянути за посиланням:</p>
+
+                        <a href="https://structum.onrender.com/worker/${userId}">
+                            Відкрити перепустку
+                        </a>
+
+                        <hr>
+                        <small>STRUCTUM system</small>
                     </div>
                 `
             })
         });
 
-        const responseText = await response.text(); 
-        let data = {};
-        
-        try {
-            data = JSON.parse(responseText);
-        } catch (e) {
-            console.error("Vercel/Resend все еще вернул HTML:", responseText.substring(0, 250));
-            return res.status(500).json({ success: false, message: 'Поштовий сервіс повернув некоректну відповідь' });
+        if (!response.ok) {
+            return res.status(500).json({
+                success: false,
+                message: 'Ошибка отправки email'
+            });
         }
 
-        if (response.ok) {
-            console.log(`✅ Лист успішно відправлено через HTTP API! ID: ${data.id || 'OK'}`);
-            return res.json({ success: true, message: `Перепустку успішно відправлено на пошту!` });
-        } else {
-            console.error('Помилка відповіді API Resend:', data);
-            return res.status(500).json({ success: false, message: 'Поштовий сервіс відхилив запит' });
-        }
+        res.json({ success: true });
 
     } catch (error) {
-        console.error('Помилка відправки Email через HTTP API:', error);
-        res.status(500).json({ success: false, message: 'Помилка сервера при відправці листа' });
+        console.error(error);
+        res.status(500).json({ success: false });
     }
 });
-
-
-
-
-
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('🍃 Успешно подключено к MongoDB Atlas!'))
@@ -559,9 +539,6 @@ app.get('/api/attendance/download-excel', async (req, res) => {
 });
 
 
-
-// ______________________
-
 // --- РОУТ ДЛЯ ПОЛУЧЕНИЯ ВСЕХ УНИКАЛЬНЫХ ОБЪЕКТОВ ---
 app.get('/api/objects', async (req, res) => {
     try {
@@ -573,8 +550,6 @@ app.get('/api/objects', async (req, res) => {
     }
 });
 
-// --- ЗАЩИЩЕННЫЙ РОУТ УДАЛЕНИЯ ОБЪЕКТА С ПАРОЛЕМ АДМИНИСТРАТОРА ---
-// --- ЗАЩИЩЕННЫЙ РОУТ УДАЛЕНИЯ ОБЪЕКТА С ПРОВЕРКОЙ ПАРОЛЯ АККАУНТА ---
 // --- ЗАЩИЩЕННЫЙ РОУТ УДАЛЕНИЯ ОБЪЕКТА (ПРОВЕРКА ТОЛЬКО ЛОГИНА И ПАРОЛЯ) ---
 app.delete('/api/objects', async (req, res) => {
     try {
@@ -610,54 +585,6 @@ app.delete('/api/objects', async (req, res) => {
     }
 });
 
-
-
-// --- РОУТ ДЛЯ ОТПРАВКИ QR-КОДА НА EMAIL РАБОТНИКА ---
-app.post('/api/users/send-qr-email', async (req, res) => {
-    try {
-        const { email, userName, qrImageDataUrl } = req.body;
-
-        if (!email || !userName || !qrImageDataUrl) {
-            return res.status(400).json({ success: false, message: 'Відсутні обов\'язкові дані для відправки!' });
-        }
-
-        // Отсекаем техническую шапку Base64, чтобы получить чистые бинарные данные картинки
-        const base64Data = qrImageDataUrl.replace(/^data:image\/png;base64,/, "");
-
-        const mailOptions = {
-            from: '"STRUCTUM Облік Персоналу" <themaxplayn@gmail.com>', // Почта компании
-            to: email, // Почта сотрудника из базы данных
-            subject: `🏗️ Ваша електронна перепустка — STRUCTUM`,
-            html: `
-                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                    <h2 style="color: #28a745;">Вітаємо, ${userName}!</h2>
-                    <p>Адміністрація компанії <strong>STRUCTUM</strong> сформувала для вас персональну електронну перепустку.</p>
-                    <p>Ваш індивідуальний QR-код знаходиться у вкладенні до цього листа.</p>
-                    <p style="background: #f4f6f9; padding: 10px; border-left: 4px solid #007bff;">
-                        <strong>Важливо:</strong> Збережіть це зображення на телефон та пред'являйте його бригадиру при вході на будівельний об'єкт для фіксації робочого часу.
-                    </p>
-                    <br>
-                    <small style="color: #888;">Цей лист згенеровано автоматично, відповідати на нього не потрібно.</small>
-                </div>
-            `,
-            attachments: [
-                {
-                    filename: `Perepustka_${userName.replace(/\s+/g, '_')}.png`,
-                    content: base64Data,
-                    encoding: 'base64'
-                }
-            ]
-        };
-
-        // Отправляем письмо
-        await transporter.sendMail(mailOptions);
-        
-        res.json({ success: true, message: `Перепустку успішно відправлено на пошту ${email}!` });
-    } catch (error) {
-        console.error('Помилка відправки Email:', error);
-        res.status(500).json({ success: false, message: 'Помилка сервера при відправці листа' });
-    }
-});
 
 
 // --- ЗАПУСК СЕРВЕРА (Всегда самый конец файла) ---
