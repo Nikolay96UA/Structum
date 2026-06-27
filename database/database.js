@@ -22,20 +22,66 @@ const MONGO_URI = 'mongodb+srv://themaxplayn_db_user:6Qe2X8KRlCOISdcv@cluster0.x
 
 // --- НАСТРОЙКА ОТПРАВКИ EMAIL (NODEMAILER) ---
 // --- НАСТРОЙКА ОТПРАВКИ EMAIL, АДАПТИРОВАННАЯ ДЛЯ СЕТИ RENDER (СТРОГО ЧЕРЕЗ IPv4) ---
-const transporter = nodemailer.createTransport({
-    host: 'gmail.com',  // Явно указываем SMTP сервер Google
-    port: 587,               // Используем порт 587 (он открыт на Render в отличие от 465)
-    secure: false,           // false для порта 587 (будет использоваться STARTTLS)
-    auth: {
-        user: 'themaxplayn@gmail.com', // Ваша корпоративная почта Gmail
-        pass: 'puqmsgqfrwataxel'               // Ваш 16-значный пароль приложения без пробелов
-    },
-    // 🌟 КРИТИЧЕСКИЙ БЛОК: Заставляем Node.js игнорировать IPv6 и стучаться строго через IPv4
-    connectionTimeout: 10000, 
-    greetingTimeout: 10000,
-    socketTimeout: 20000,
-    dns: {
-        family: 4 // Цифра 4 принудительно включает IPv4, решая проблему ENETUNREACH!
+
+// --- ОБНОВЛЕННЫЙ РОУТ ОТПРАВКИ QR ЧЕРЕЗ HTTP API (ОБХОД БЛОКИРОВОК SMTP НА RENDER) ---
+app.post('/api/users/send-qr-email', async (req, res) => {
+    try {
+        const { email, userName, qrImageDataUrl } = req.body;
+
+        if (!email || !userName || !qrImageDataUrl) {
+            return res.status(400).json({ success: false, message: 'Відсутні обов\'язкові дані для відправки!' });
+        }
+
+        // 🌟 ТВОЙ API КЛЮЧ ИЗ RESEND.COM (Вставь его сюда вместо RE_XXXXXX)
+        const RESEND_API_KEY = "re_9ks7THyM_C7hnQ78hwTGSvi19spksc3o4"; 
+
+        console.log(`Запуск отправки письма через HTTP API на адрес ${email}...`);
+
+        // Делаем прямой HTTPS запрос к API почтового сервиса (порт 443 всегда открыт на Render!)
+        const response = await fetch('https://resend.com', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                from: 'STRUCTUM Облік Персоналу <onboarding@resend.dev>', // На бесплатном тарифе отправка идет с этого системного адреса
+                to: email,
+                subject: `🏗️ Ваша електронна перепустка — STRUCTUM`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e1e4e8; border-radius: 8px;">
+                        <h2 style="color: #28a745; border-bottom: 2px solid #28a745; padding-bottom: 10px;">Вітаємо, ${userName}!</h2>
+                        <p>Адміністрація компанії <strong>STRUCTUM</strong> сформувала для вас персональну електронну перепустку.</p>
+                        <p>Ваш індивідуальний QR-код знаходиться у вкладенні до цього листа.</p>
+                        <p style="background: #f4f6f9; padding: 12px; border-left: 4px solid #007bff; margin: 20px 0;">
+                            <strong>Важливо:</strong> Збережіть це зображення на телефон та пред'являйте його бригадиру при вході на будівельний об'єкт для фіксації робочого часу.
+                        </p>
+                        <br>
+                        <small style="color: #888; display: block; border-top: 1px solid #e1e4e8; padding-top: 10px;">Цей лист згенеровано автоматично системою обліку персоналу STRUCTUM.</small>
+                    </div>
+                `,
+                attachments: [
+                    {
+                        filename: `Perepustka_${userName.replace(/\s+/g, '_')}.png`,
+                        content: qrImageDataUrl.replace(/^data:image\/png;base64,/, "") // Чистый Base64 код картинки
+                    }
+                ]
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            console.log(`✅ Письмо успешно отправлено через HTTP API! ID: ${data.id}`);
+            return res.json({ success: true, message: `Перепустку успішно відправлено на пошту!` });
+        } else {
+            console.error('Ошибка ответа API Resend:', data);
+            return res.status(500).json({ success: false, message: 'Поштовий сервіс відхилив запит' });
+        }
+
+    } catch (error) {
+        console.error('Помилка відправки Email через HTTP API:', error);
+        res.status(500).json({ success: false, message: 'Помилка сервера при відправці листа' });
     }
 });
 
