@@ -31,6 +31,8 @@ const userSchema = new mongoose.Schema({
     bonuses: { type: Number, default: 0 },    // Премии (Додано)
     penalties: { type: Number, default: 0 },  // Штрафы (Утримано)
     notes: { type: String, default: '' },     // Примечания (Примітки)
+      phone: { type: String, default: '' },   // 🌟 Новое поле: Телефон
+    email: { type: String, default: '' },   // 🌟 Новое поле: Email
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -173,7 +175,9 @@ app.post('/api/users', async (req, res) => {
             debt: req.body.debt || 0,
             bonuses: req.body.bonuses || 0,
             penalties: req.body.penalties || 0,
-            notes: req.body.notes || ''
+            notes: req.body.notes || '',
+            phone: req.body.phone || '',
+            email: req.body.email || ''
         });
         await newUser.save(); 
         res.status(201).json({ success: true, user: newUser });
