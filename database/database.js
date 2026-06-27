@@ -21,13 +21,24 @@ const upload = multer({ storage: storage });
 const MONGO_URI = 'mongodb+srv://themaxplayn_db_user:6Qe2X8KRlCOISdcv@cluster0.xf3circ.mongodb.net/myDatabase?appName=Cluster0';
 
 // --- НАСТРОЙКА ОТПРАВКИ EMAIL (NODEMAILER) ---
+// --- НАСТРОЙКА ОТПРАВКИ EMAIL, АДАПТИРОВАННАЯ ДЛЯ СЕТИ RENDER (СТРОГО ЧЕРЕЗ IPv4) ---
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: '://gmail.com',  // Явно указываем SMTP сервер Google
+    port: 587,               // Используем порт 587 (он открыт на Render в отличие от 465)
+    secure: false,           // false для порта 587 (будет использоваться STARTTLS)
     auth: {
-        user: 'themaxplayn@gmail.com', // 🌟 Почта вашей компании
-        pass: 'puqm sgqf rwat axel'          // 🌟 Специальный пароль приложения (App Password) от Gmail
+        user: 'your_company_email@gmail.com', // Ваша корпоративная почта Gmail
+        pass: 'abcdefghijklmnop'               // Ваш 16-значный пароль приложения без пробелов
+    },
+    // 🌟 КРИТИЧЕСКИЙ БЛОК: Заставляем Node.js игнорировать IPv6 и стучаться строго через IPv4
+    connectionTimeout: 10000, 
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
+    dns: {
+        family: 4 // Цифра 4 принудительно включает IPv4, решая проблему ENETUNREACH!
     }
 });
+
 
 
 mongoose.connect(MONGO_URI)
