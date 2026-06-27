@@ -21,11 +21,7 @@ const upload = multer({ storage: storage });
 const MONGO_URI = 'mongodb+srv://themaxplayn_db_user:6Qe2X8KRlCOISdcv@cluster0.xf3circ.mongodb.net/myDatabase?appName=Cluster0';
 
 // --- НАСТРОЙКА ОТПРАВКИ EMAIL (NODEMAILER) ---
-// --- НАСТРОЙКА ОТПРАВКИ EMAIL, АДАПТИРОВАННАЯ ДЛЯ СЕТИ RENDER (СТРОГО ЧЕРЕЗ IPv4) ---
 
-// --- ОБНОВЛЕННЫЙ РОУТ ОТПРАВКИ QR ЧЕРЕЗ HTTP API (ОБХОД БЛОКИРОВОК SMTP НА RENDER) ---
-// --- ОБНОВЛЕННЫЙ РОУТ ОТПРАВКИ QR ЧЕРЕЗ HTTP API RESEND (С ЗАЩИТОЙ ОТ БЛОКИРОВОК CLOUDFLARE) ---
-// --- РОУТ ОТПРАВКИ QR ЧЕРЕЗ АКТУАЛЬНЫЙ API RESEND ---
 app.post('/api/users/send-qr-email', async (req, res) => {
     try {
         const { email, userName, qrImageDataUrl } = req.body;
@@ -38,36 +34,34 @@ app.post('/api/users/send-qr-email', async (req, res) => {
 
         console.log(`Запуск отправки письма через HTTP API на адрес ${email}...`);
 
-        // 🌟 ШАГ 1: Используем точный эндпоинт без лишних слэшей и редиректов
         const response = await fetch('https://resend.com', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${RESEND_API_KEY}`,
                 'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                'User-Agent': 'Mozilla/5.0'
             },
             body: JSON.stringify({
-                from: 'onboarding@resend.dev', // 🌟 Для тестового режима пишем СТРОГО чистый email без лишнего текста
-                to: [email], // Resend на некоторых версиях API требует массив строк для адресатов
+                from: 'onboarding@resend.dev', 
+                to: [email], 
                 subject: '🏗️ Ваша електронна перепустка — STRUCTUM',
+                // 🌟 ВСТРОИЛИ QR-КОД ПРЯМО В HTML ЧЕРЕЗ ТЕГ <img> (Картинка отобразится прямо внутри письма!)
                 html: `
-                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e1e4e8; border-radius: 8px;">
-                        <h2 style="color: #28a745; border-bottom: 2px solid #28a745; padding-bottom: 10px;">Вітаємо, ${userName}!</h2>
-                        <p>Адміністрація компанії <strong>STRUCTUM</strong> сформувала для вас персональну електронну перепустку.</p>
-                        <p>Ваш індивідуальний QR-код знаходиться у вкладенні до цього листа.</p>
-                        <p style="background: #f4f6f9; padding: 12px; border-left: 4px solid #007bff; margin: 20px 0;">
-                            <strong>Важливо:</strong> Збережіть це зображення на телефон та пред'являйте його бригадиру при вході на будівельний об'єкт для фіксації робочого часу.
+                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 500px; margin: 0 auto; border: 1px solid #e1e4e8; border-radius: 8px; text-align: center;">
+                        <h2 style="color: #28a745; border-bottom: 2px solid #28a745; padding-bottom: 10px; text-align: left;">Вітаємо, ${userName}!</h2>
+                        <p style="text-align: left;">Адміністрація компанії <strong>STRUCTUM</strong> сформувала для вас персональну електронну перепустку.</p>
+                        
+                        <div style="margin: 25px 0; background: #ffffff; padding: 10px; display: inline-block; border: 2px solid #28a745; border-radius: 4px;">
+                            <img src="${qrImageDataUrl}" alt="QR Перепустка" style="width: 250px; height: 250px; display: block;" />
+                        </div>
+
+                        <p style="background: #f4f6f9; padding: 12px; border-left: 4px solid #007bff; text-align: left; margin: 20px 0;">
+                            <strong>Важливо:</strong> Збережіть цей QR-код на телефон (зробіть скріншот листа) та пред'являйте його бригадиру при вході на об'єкт для фіксації робочого часу.
                         </p>
                         <br>
-                        <small style="color: #888; display: block; border-top: 1px solid #e1e4e8; padding-top: 10px;">Цей лист згенеровано автоматично системою обліку персоналу STRUCTUM.</small>
+                        <small style="color: #888; display: block; border-top: 1px solid #e1e4e8; padding-top: 10px; text-align: left;">Цей лист згенеровано автоматично системою STRUCTUM.</small>
                     </div>
-                `,
-                attachments: [
-                    {
-                        filename: `Perepustka_${userName.replace(/\s+/g, '_')}.png`,
-                        content: qrImageDataUrl.replace(/^data:image\/png;base64,/, "") // Чистый Base64 узора
-                    }
-                ]
+                `
             })
         });
 
@@ -77,7 +71,7 @@ app.post('/api/users/send-qr-email', async (req, res) => {
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            console.error("Сервер Resend все еще вернул HTML. Вот начало:", responseText.substring(0, 200));
+            console.error("Vercel/Resend все еще вернул HTML:", responseText.substring(0, 250));
             return res.status(500).json({ success: false, message: 'Поштовий сервіс повернув некоректну відповідь' });
         }
 
@@ -94,6 +88,7 @@ app.post('/api/users/send-qr-email', async (req, res) => {
         res.status(500).json({ success: false, message: 'Помилка сервера при відправці листа' });
     }
 });
+
 
 
 
