@@ -22,54 +22,74 @@ const MONGO_URI = 'mongodb+srv://themaxplayn_db_user:6Qe2X8KRlCOISdcv@cluster0.x
 
 
 // --- НАДЕЖНЫЙ РОУТ ОТПРАВКИ ТЕКСТОВОГО ПИСЬМА СО ССЫЛКОЙ НА ПРОПУСК ---
+// --- РОУТ ОТПРАВКИ QR-КОДА НА EMAIL ЧЕРЕЗ HTTP API BREVO ---
 app.post('/api/users/send-qr-email', async (req, res) => {
     try {
-        const { email, userName, qrImage } = req.body;
+        const { email, userName, qrImageDataUrl } = req.body;
 
-        if (!email || !qrImage) {
-            return res.status(400).json({ success: false });
+        if (!email || !userName || !qrImageDataUrl) {
+            return res.status(400).json({ success: false, message: 'Відсутні обов\'язкові дані для відправки!' });
         }
 
-        const RESEND_API_KEY = "re_9ks7THyM_C7hnQ78hwTGSvi19spksc3o4";
+        // 🌟 ТВОЙ API КЛЮЧ ИЗ BREVO (Вставь его сюда вместо xkeysib-...)
+        const BREVO_API_KEY = "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"; 
 
-        // убираем prefix "data:image/png;base64,"
-        const base64 = qrImage.split(',')[1];
+        console.log(`Запуск отправки письма через Brevo HTTP API на адрес ${email}...`);
 
-        const response = await fetch('https://api.resend.com/emails', {
+        // Очищаем шапку Base64, чтобы оставить только чистый текстовый код картинки
+        const base64Content = qrImageDataUrl.replace(/^data:image\/png;base64,/, "");
+
+        // Делаем официальный запрос к шлюзу Brevo v3 (порт 443 всегда открыт на Render)
+        const response = await fetch('https://brevo.com', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${RESEND_API_KEY}`,
-                'Content-Type': 'application/json',
+                'accept': 'application/json',
+                'api-key': BREVO_API_KEY,
+                'content-type': 'application/json'
             },
             body: JSON.stringify({
-                from: 'STRUCTUM <onboarding@resend.dev>',
-                to: [email],
-                subject: 'Ваш QR-код перепустки',
-                html: `
-                    <h2>Ваша перепустка готова</h2>
-                    <p>QR-код во вложении письма</p>
+                // В поле email укажи ту почту, на которую регистрировал аккаунт Brevo
+                sender: { name: 'STRUCTUM Облік Персоналу', email: 'maloshenko1996@gmail.com' },
+                to: [{ email: email, name: userName }],
+                subject: '🏗️ Ваша електронна перепустка — STRUCTUM',
+                htmlContent: `
+                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 500px; margin: 0 auto; border: 1px solid #e1e4e8; border-radius: 8px;">
+                        <h2 style="color: #28a745; border-bottom: 2px solid #28a745; padding-bottom: 10px;">Вітаємо, ${userName}!</h2>
+                        <p>Адміністрація компанії <strong>STRUCTUM</strong> сформувала для вас персональну електронну перепустку.</p>
+                        <p>Ваша індивідуальна перепустка з QR-кодом прикріплена файлом до цього листа.</p>
+                        <p style="background: #f4f6f9; padding: 12px; border-left: 4px solid #007bff; margin: 20px 0; font-size: 14px;">
+                            <strong>Важливо:</strong> Збережіть отримане зображення на телефон та пред'являйте його бригадиру при вході на об'єкт для фіксації робочого часу.
+                        </p>
+                        <br>
+                        <small style="color: #888; display: block; border-top: 1px solid #e1e4e8; padding-top: 10px;">Цей лист згенеровано автоматично системою STRUCTUM.</small>
+                    </div>
                 `,
+                // 🌟 ПЕРЕДАЧА СКАЧИВАЕМОГО QR-ФАЙЛА
                 attachments: [
                     {
-                        filename: `${userName}_QR.png`,
-                        content: base64,
-                        type: 'image/png'
+                        name: `Perepustka_${userName.replace(/\s+/g, '_')}.png`,
+                        content: base64Content
                     }
                 ]
             })
         });
 
-        if (!response.ok) {
-            return res.status(500).json({ success: false });
+        const responseText = await response.text();
+
+        if (response.ok) {
+            console.log(`✅ Письмо успешно отправлено через Brevo API!`);
+            return res.json({ success: true, message: `Перепустку успішно відправлено на пошту!` });
+        } else {
+            console.error('Ошибка ответа API Brevo:', responseText);
+            return res.status(500).json({ success: false, message: 'Поштовий сервіс Brevo відхилив запит' });
         }
 
-        res.json({ success: true });
-
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false });
+        console.error('Помилка відправки Email через Brevo API:', error);
+        res.status(500).json({ success: false, message: 'Помилка сервера при відправці листа' });
     }
 });
+
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('🍃 Успешно подключено к MongoDB Atlas!'))
