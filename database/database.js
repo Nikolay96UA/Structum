@@ -23,6 +23,7 @@ const MONGO_URI = 'mongodb+srv://themaxplayn_db_user:6Qe2X8KRlCOISdcv@cluster0.x
 
 // --- НАДЕЖНЫЙ РОУТ ОТПРАВКИ ТЕКСТОВОГО ПИСЬМА СО ССЫЛКОЙ НА ПРОПУСК ---
 // --- РОУТ ОТПРАВКИ QR-КОДА НА EMAIL ЧЕРЕЗ HTTP API BREVO ---
+// --- ИСПРАВЛЕННЫЙ РОУТ ОТПРАВКИ QR ЧЕРЕЗ API BREVO (ЧИСТКА BASE64) ---
 app.post('/api/users/send-qr-email', async (req, res) => {
     try {
         const { email, userName, qrImageDataUrl } = req.body;
@@ -31,15 +32,15 @@ app.post('/api/users/send-qr-email', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Відсутні обов\'язкові дані для відправки!' });
         }
 
-        // 🌟 ТВОЙ API КЛЮЧ ИЗ BREVO (Вставь его сюда вместо xkeysib-...)
-        const BREVO_API_KEY = "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"; 
+        const BREVO_API_KEY = "xkeysib-re_9ks7THyM_C7hnQ78hwTGSvi19spksc3o4"; 
 
         console.log(`Запуск отправки письма через Brevo HTTP API на адрес ${email}...`);
 
-        // Очищаем шапку Base64, чтобы оставить только чистый текстовый код картинки
-        const base64Content = qrImageDataUrl.replace(/^data:image\/png;base64,/, "");
+        // 🌟 ОЧИСТКА ГРАФИЧЕСКОГО КОДА: убираем заголовок и ВСЕ скрытые пробелы/переносы строк
+        const base64Content = qrImageDataUrl
+            .replace(/^data:image\/png;base64,/, "")
+            .replace(/\s/g, ''); // Удаляет абсолютно все пробельные символы
 
-        // Делаем официальный запрос к шлюзу Brevo v3 (порт 443 всегда открыт на Render)
         const response = await fetch('https://brevo.com', {
             method: 'POST',
             headers: {
@@ -48,9 +49,9 @@ app.post('/api/users/send-qr-email', async (req, res) => {
                 'content-type': 'application/json'
             },
             body: JSON.stringify({
-                // В поле email укажи ту почту, на которую регистрировал аккаунт Brevo
+                // Убедись, что тут указан твой подтвержденный адрес логина Brevo!
                 sender: { name: 'STRUCTUM Облік Персоналу', email: 'maloshenko1996@gmail.com' },
-                to: [{ email: email, name: userName }],
+                to: [{ email: email.trim(), name: userName }],
                 subject: '🏗️ Ваша електронна перепустка — STRUCTUM',
                 htmlContent: `
                     <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 500px; margin: 0 auto; border: 1px solid #e1e4e8; border-radius: 8px;">
@@ -64,7 +65,6 @@ app.post('/api/users/send-qr-email', async (req, res) => {
                         <small style="color: #888; display: block; border-top: 1px solid #e1e4e8; padding-top: 10px;">Цей лист згенеровано автоматично системою STRUCTUM.</small>
                     </div>
                 `,
-                // 🌟 ПЕРЕДАЧА СКАЧИВАЕМОГО QR-ФАЙЛА
                 attachments: [
                     {
                         name: `Perepustka_${userName.replace(/\s+/g, '_')}.png`,
@@ -80,8 +80,9 @@ app.post('/api/users/send-qr-email', async (req, res) => {
             console.log(`✅ Письмо успешно отправлено через Brevo API!`);
             return res.json({ success: true, message: `Перепустку успішно відправлено на пошту!` });
         } else {
+            // Если Brevo вернул ошибку, сервер выведет точную причину в логи Render
             console.error('Ошибка ответа API Brevo:', responseText);
-            return res.status(500).json({ success: false, message: 'Поштовий сервіс Brevo відхилив запит' });
+            return res.status(400).json({ success: false, message: responseText });
         }
 
     } catch (error) {
@@ -89,6 +90,7 @@ app.post('/api/users/send-qr-email', async (req, res) => {
         res.status(500).json({ success: false, message: 'Помилка сервера при відправці листа' });
     }
 });
+
 
 
 mongoose.connect(MONGO_URI)
