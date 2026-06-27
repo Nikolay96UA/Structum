@@ -24,16 +24,16 @@ const MONGO_URI = 'mongodb+srv://themaxplayn_db_user:6Qe2X8KRlCOISdcv@cluster0.x
 // --- НАДЕЖНЫЙ РОУТ ОТПРАВКИ ТЕКСТОВОГО ПИСЬМА СО ССЫЛКОЙ НА ПРОПУСК ---
 app.post('/api/users/send-qr-email', async (req, res) => {
     try {
-        const { email, userName, userId } = req.body;
+        const { email, userName, qrImage } = req.body;
 
-        if (!email || !userName || !userId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Не хватает данных'
-            });
+        if (!email || !qrImage) {
+            return res.status(400).json({ success: false });
         }
 
         const RESEND_API_KEY = "re_9ks7THyM_C7hnQ78hwTGSvi19spksc3o4";
+
+        // убираем prefix "data:image/png;base64,"
+        const base64 = qrImage.split(',')[1];
 
         const response = await fetch('https://api.resend.com/emails', {
             method: 'POST',
@@ -44,31 +44,23 @@ app.post('/api/users/send-qr-email', async (req, res) => {
             body: JSON.stringify({
                 from: 'STRUCTUM <onboarding@resend.dev>',
                 to: [email],
-                subject: '🏗️ Ваша перепустка STRUCTUM',
+                subject: 'Ваш QR-код перепустки',
                 html: `
-                    <div style="font-family:Arial;padding:20px">
-                        <h2>Вітаємо, ${userName}</h2>
-
-                        <p>Ваша електронна перепустка готова.</p>
-
-                        <p>QR-код можна переглянути за посиланням:</p>
-
-                        <a href="https://structum.onrender.com/worker/${userId}">
-                            Відкрити перепустку
-                        </a>
-
-                        <hr>
-                        <small>STRUCTUM system</small>
-                    </div>
-                `
+                    <h2>Ваша перепустка готова</h2>
+                    <p>QR-код во вложении письма</p>
+                `,
+                attachments: [
+                    {
+                        filename: `${userName}_QR.png`,
+                        content: base64,
+                        type: 'image/png'
+                    }
+                ]
             })
         });
 
         if (!response.ok) {
-            return res.status(500).json({
-                success: false,
-                message: 'Ошибка отправки email'
-            });
+            return res.status(500).json({ success: false });
         }
 
         res.json({ success: true });

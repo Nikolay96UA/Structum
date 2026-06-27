@@ -393,17 +393,18 @@ ${encodeURIComponent(user.lastLocation)}`;
         // 📧 ОТПРАВКА EMAIL (АВТОМАТИЧЕСКИ)
         if (user.email) {
             try {
-                await fetch('https://structum.onrender.com/api/users/send-qr-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: user.email,
-                        userName: user.name,
-                        userId: user._id
-                    })
-                });
+               await fetch('https://structum.onrender.com/api/users/send-qr-email', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        email: user.email,
+        userName: user.name,
+        userId: user._id,
+        qrImage: imgDataUrl   // 👈 ВОТ ЭТО ГЛАВНОЕ
+    })
+});
 
                 console.log(`📧 Email отправлен на ${user.email}`);
             } catch (err) {
