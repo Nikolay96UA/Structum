@@ -27,8 +27,8 @@ const transporter = nodemailer.createTransport({
     port: 587,               // Используем порт 587 (он открыт на Render в отличие от 465)
     secure: false,           // false для порта 587 (будет использоваться STARTTLS)
     auth: {
-        user: 'your_company_email@gmail.com', // Ваша корпоративная почта Gmail
-        pass: 'abcdefghijklmnop'               // Ваш 16-значный пароль приложения без пробелов
+        user: 'themaxplayn@gmail.com', // Ваша корпоративная почта Gmail
+        pass: 'puqm sgqf rwat axel'               // Ваш 16-значный пароль приложения без пробелов
     },
     // 🌟 КРИТИЧЕСКИЙ БЛОК: Заставляем Node.js игнорировать IPv6 и стучаться строго через IPv4
     connectionTimeout: 10000, 
