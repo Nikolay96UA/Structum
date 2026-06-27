@@ -398,31 +398,31 @@ ${encodeURIComponent(user.lastLocation)}`;
             document.body.removeChild(downloadLink);
 
                         // 🌟 ДОПОЛНИТЕЛЬНАЯ ЛОГИКА: АВТОМАТИЧЕСКАЯ ОТПРАВКА НА EMAIL СОТРУДНИКА
+           
+            // 🌟 ОБНОВЛЕННАЯ ЛЕГКАЯ ОТПРАВКА НА ПОЧТУ БЕЗ ТЯЖЕЛЫХ КАРТИНОК
             if (user.email && user.email.trim() !== '' && user.email !== 'Немає даних') {
-                console.log(`Запуск отправки QR на почту: ${user.email}`);
+                console.log(`Запуск легкой отправки на почту: ${user.email}`);
                 
-                // Делаем фоновый асинхронный запрос к бэкенду
-                fetch('https://structum.onrender.com/api/users/send-qr-email', {
+                fetch('https://onrender.com', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         email: user.email.trim(),
                         userName: user.name,
-                        qrImageDataUrl: imgDataUrl // Передаем сгенерированный холст в формате Base64
+                        userId: user._id // 🌟 Передаем чистый ID для формирования ссылки в письме
                     })
                 })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        alert(`✅ Пропуск завантажено на ПК та автоматично надіслано працівнику на пошту: ${user.email}`);
+                        alert(`✅ Перепустку завантажено на ПК та автоматично надіслано працівнику на пошту: ${user.email}`);
                     } else {
-                        console.error('Сервер не смог отправить email:', data.message);
+                        console.error('Помилка отправки:', data.message);
                     }
                 })
-                .catch(err => console.error('Ошибка сети при отправке email:', err));
+                .catch(err => console.error('Помилка мережі:', err));
             } else {
-                // Если почты нет в базе, просто уведомляем о скачивании файла
-                alert('✅ Перепустку успішно завантажено на комп\'ютер! (Email працівника не вказано в базі, тому лист не відправлено)');
+                alert('✅ Перепустку успішно завантажено на комп\'ютер! (Email працівника не вказано)');
             }
 
 
