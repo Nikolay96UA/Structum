@@ -23,7 +23,7 @@ const MONGO_URI = 'mongodb+srv://themaxplayn_db_user:6Qe2X8KRlCOISdcv@cluster0.x
 // --- НАСТРОЙКА ОТПРАВКИ EMAIL (NODEMAILER) ---
 // --- НАСТРОЙКА ОТПРАВКИ EMAIL, АДАПТИРОВАННАЯ ДЛЯ СЕТИ RENDER (СТРОГО ЧЕРЕЗ IPv4) ---
 const transporter = nodemailer.createTransport({
-    host: '://gmail.com',  // Явно указываем SMTP сервер Google
+    host: 'gmail.com',  // Явно указываем SMTP сервер Google
     port: 587,               // Используем порт 587 (он открыт на Render в отличие от 465)
     secure: false,           // false для порта 587 (будет использоваться STARTTLS)
     auth: {
