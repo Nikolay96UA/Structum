@@ -496,7 +496,7 @@ app.post('/api/send-qr', async (req, res) => {
         const imageBuffer = Buffer.from(base64Data, 'base64');
 
         const { data, error } = await resend.emails.send({
-            from: 'STRUCTUM <noreply@yourdomain.com>',   // або використовуй resend.com домен
+            from: 'STRUCTUM <onboarding@resend.dev>',
             to: [email],
             subject: `Перепустка — ${name || 'Працівник'}`,
             html: `
