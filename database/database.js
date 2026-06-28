@@ -7,6 +7,14 @@ import ExcelJS from 'exceljs'; // ✅ Теперь всё в едином ES-с�
 import nodemailer from 'nodemailer';
 
 
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'themaxplayn@gmail.com',
+        pass: 'puqmsgqfrwataxel'   // App Password від Google!
+    }
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -479,6 +487,49 @@ app.get('/api/attendance/download-excel', async (req, res) => {
         res.status(500).send('Помилка сервера при створенні Excel');
     }
 });
+
+
+// ______________________________________
+
+// === НОВИЙ РОУТ ДЛЯ ВІДПРАВКИ QR ===
+app.post('/api/send-qr', async (req, res) => {
+    const { userId, email, name, qrBase64 } = req.body;
+
+    if (!email || !qrBase64) {
+        return res.status(400).json({ success: false, message: "Email або QR відсутні" });
+    }
+
+    try {
+        // Перетворюємо base64 в буфер
+        const base64Data = qrBase64.replace(/^data:image\/png;base64,/, "");
+        const imageBuffer = Buffer.from(base64Data, 'base64');
+
+        await transporter.sendMail({
+            from: '"STRUCTUM" <your-email@gmail.com>', // Зміни на свій email
+            to: email,
+            subject: `Перепустка — ${name}`,
+            html: `
+                <h2>Ваша електронна перепустка</h2>
+                <p>Добрий день, ${name}!</p>
+                <p>Прикріплюємо ваш QR-код для проходу на об'єкти.</p>
+                <p><strong>ID:</strong> ${userId}</p>
+            `,
+            attachments: [
+                {
+                    filename: `Перепустка_${name.replace(/\s+/g, '_')}.png`,
+                    content: imageBuffer,
+                    contentType: 'image/png'
+                }
+            ]
+        });
+
+        res.json({ success: true, message: "Email відправлено" });
+    } catch (error) {
+        console.error("Помилка відправки email:", error);
+        res.status(500).json({ success: false, message: "Не вдалося відправити email" });
+    }
+});
+// _____________________________________
 
 
 // --- РОУТ ДЛЯ ПОЛУЧЕНИЯ ВСЕХ УНИКАЛЬНЫХ ОБЪЕКТОВ ---

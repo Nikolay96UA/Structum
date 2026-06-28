@@ -278,6 +278,7 @@
 
 // 🌟 ОБНОВЛЕННАЯ ФУНКЦИЯ КАРТОЧКИ — С ГЕНЕРАЦИЕЙ 100% УНИКАЛЬНЫХ И НАСТОЯЩИХ QR
 // 🌟 АДАПТИРОВАННАЯ ФУНКЦИЯ КАРТОЧКИ С ТВОИМ ГЕНЕРАТОРОМ QRious И АВТОСКАЧИВАНИЕМ
+// 🌟 ОНОВЛЕНА ФУНКЦІЯ З АВТОМАТИЧНОЮ ВІДПРАВКОЮ НА EMAIL
 function openWorkerModal(user) {
     document.getElementById('modalName').textContent = user.name || 'Не вказано';
     document.getElementById('modalJob').textContent = user.job || 'Не вказано';
@@ -285,123 +286,101 @@ function openWorkerModal(user) {
     document.getElementById('modalPhone').textContent = user.phone || 'Немає даних';
     document.getElementById('modalEmail').textContent = user.email || 'Немає даних';
 
-    // Настройка ссылки для скачивания Excel табеля объекта
-    // 🌟 ИСПРАВЛЕННЫЙ БЛОК ФОРМИРОВАНИЯ ССЫЛКИ СКАЧИВАНИЯ ТАБЕЛЯ
-    // 🌟 ТЕПЕР СТРОГО ПОВНИЙ ШЛЯХ: ДОМЕН, РОУТ ТА ПАРАМЕТР ОБ'ЄКТА
+    // Кнопка Excel
     const excelBtn = document.getElementById('modalExcelBtn');
-    
     if (user.lastLocation && 
         user.lastLocation !== 'Немає відміток' && 
         user.lastLocation !== 'Не відмічений' && 
-        user.lastLocation !== 'Не відмічений взагалі' &&
-        !user.lastLocation.includes('Сьогодні ніде')) { 
-
-
-            // ✅ Абсолютно точна адреса вашого живого API на Render:
-        excelBtn.href = `https://structum.onrender.com/api/attendance/download-excel?objectName=
-${encodeURIComponent(user.lastLocation)}`;
+        !user.lastLocation.includes('Сьогодні ніде')) {
+        excelBtn.href = `https://structum.onrender.com/api/attendance/download-excel?objectName=${encodeURIComponent(user.lastLocation)}`;
         excelBtn.style.display = 'block';
     } else {
-        // Якщо об'єкт не визначено — ховаємо кнопку, щоб уникнути помилок
-        excelBtn.style.display = 'none'; 
+        excelBtn.style.display = 'none';
     }
 
-
-
-    // Очищаем старые привязки событий с кнопки QR (клонируем кнопку)
     const qrBtn = document.getElementById('modalQrBtn');
     const newQrBtn = qrBtn.cloneNode(true);
     qrBtn.parentNode.replaceChild(newQrBtn, qrBtn);
 
-    // 1. Твоя функция принудительной загрузки библиотеки QRious
-    const ensureQRiousLoaded = () => {
-        return new Promise((resolve, reject) => {
-            if (typeof QRious !== 'undefined') {
-                resolve();
-                return;
-            }
-            console.warn("Бібліотека QRious не знайдена в HTML. Завантажуємо примусово...");
-            const script = document.createElement('script');
-            script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js";
-            script.onload = () => {
-                console.log("Бібліотека QRious успішно імпортована!");
-                resolve();
-            };
-            script.onerror = () => reject(new Error("Не вдалося завантажити бібліотеку QRious з сервера CDN."));
-            document.head.appendChild(script);
-        });
-    };
-
-    // 2. Логика генерации и мгновенного автоматического скачивания файла
     newQrBtn.addEventListener('click', async () => {
-    if (!user._id) {
-        alert('Помилка: У працівника відсутній ID в базі даних!');
-        return;
-    }
+        if (!user._id || !user.email) {
+            alert('Помилка: Відсутній ID або email працівника!');
+            return;
+        }
 
-    try {
-        await ensureQRiousLoaded();
+        try {
+            await ensureQRiousLoaded();
 
-        const qrCanvas = document.createElement('canvas');
-        const size = 500;
+            const size = 500;
+            const qrCanvas = document.createElement('canvas');
+            
+            new QRious({
+                element: qrCanvas,
+                value: user._id.toString(),
+                size: size,
+                level: 'H',
+                background: 'white',
+                foreground: 'black'
+            });
 
-        // Генерация QR
-        new QRious({
-            element: qrCanvas,
-            value: user._id.toString(),
-            size: size,
-            level: 'H',
-            background: 'white',
-            foreground: 'black'
-        });
+            // Фінальний canvas з текстом
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = size;
+            finalCanvas.height = size;
+            const ctx = finalCanvas.getContext('2d');
 
-        // Финальный холст (пропуск)
-        const finalCanvas = document.createElement('canvas');
-        finalCanvas.width = size;
-        finalCanvas.height = size;
-        const ctx = finalCanvas.getContext('2d');
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, size, size);
+            ctx.drawImage(qrCanvas, 20, 10, size - 40, size - 75);
 
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, size, size);
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(user.name || 'ПЕРЕПУСТКА', size / 2, size - 30);
 
-        ctx.drawImage(qrCanvas, 20, 10, size - 40, size - 75);
+            ctx.fillStyle = '#888';
+            ctx.font = '11px Arial';
+            ctx.fillText(`ID: ${user._id}`, size / 2, size - 12);
 
-        ctx.fillStyle = '#333';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(user.name || 'ПЕРЕПУСТКА', size / 2, size - 30);
+            const base64Image = finalCanvas.toDataURL('image/png');
 
-        ctx.fillStyle = '#888';
-        ctx.font = '11px Arial';
-        ctx.fillText(`ID: ${user._id.toString()}`, size / 2, size - 12);
+            // === СКАЧУВАННЯ ===
+            const downloadLink = document.createElement('a');
+            downloadLink.href = base64Image;
+            downloadLink.download = `Перепустка_${(user.name || 'worker').replace(/\s+/g, '_')}.png`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
 
-        // PNG скачивание
-        const imgDataUrl = finalCanvas.toDataURL('image/png');
+            // === ВІДПРАВКА НА EMAIL ===
+            const emailResponse = await fetch('https://structum.onrender.com/api/send-qr', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user._id,
+                    email: user.email,
+                    name: user.name,
+                    qrBase64: base64Image
+                })
+            });
 
-        const downloadLink = document.createElement('a');
-        downloadLink.href = imgDataUrl;
+            const result = await emailResponse.json();
 
-        const safeName = (user.name || 'worker').replace(/\s+/g, '_');
-        downloadLink.download = `Перепустка_${safeName}.png`;
+            if (result.success) {
+                alert(`✅ QR-код успішно відправлено на email: ${user.email}`);
+            } else {
+                alert('⚠️ QR завантажено, але не вдалося відправити email.');
+                console.error(result);
+            }
 
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+        } catch (error) {
+            console.error(error);
+            alert('Помилка при генерації або відправці QR-коду.');
+        }
+    });
 
-        console.log(`QR-код для "${user.name}" скачано`);
-
-        // 📧 ОТПРАВКА EMAIL (АВТОМАТИЧЕСКИ)
-     
-    } catch (error) {
-        console.error(error);
-        alert(error.message || 'Помилка генерації QR-коду.');
-    }
-});
-
-    // Открываем модальное окно на экране
     document.getElementById('workerModal').style.display = 'flex';
 }
-
 
 function filterUsers() {
     const nameQuery = document.getElementById('searchName').value.toLowerCase().trim();
