@@ -391,29 +391,7 @@ ${encodeURIComponent(user.lastLocation)}`;
         console.log(`QR-код для "${user.name}" скачано`);
 
         // 📧 ОТПРАВКА EMAIL (АВТОМАТИЧЕСКИ)
-        if (user.email) {
-            try {
-               await fetch('https://structum.onrender.com/api/users/send-qr-email', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-        email: user.email,
-        userName: user.name,
-        userId: user._id,
-        qrImage: imgDataUrl   // 👈 ВОТ ЭТО ГЛАВНОЕ
-    })
-});
-
-                console.log(`📧 Email отправлен на ${user.email}`);
-            } catch (err) {
-                console.error('Ошибка отправки email:', err);
-            }
-        } else {
-            console.warn('Email отсутствует у пользователя');
-        }
-
+     
     } catch (error) {
         console.error(error);
         alert(error.message || 'Помилка генерації QR-коду.');

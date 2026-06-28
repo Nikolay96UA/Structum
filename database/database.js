@@ -20,85 +20,6 @@ const upload = multer({ storage: storage });
 // --- ПОДКЛЮЧЕНИЕ К MONGODB ---
 const MONGO_URI = 'mongodb+srv://themaxplayn_db_user:6Qe2X8KRlCOISdcv@cluster0.xf3circ.mongodb.net/myDatabase?appName=Cluster0';
 
-
-// --- НАДЕЖНЫЙ РОУТ ОТПРАВКИ ТЕКСТОВОГО ПИСЬМА СО ССЫЛКОЙ НА ПРОПУСК ---
-// --- ПОЛНОСТЬЮ ВЫЧИЩЕННЫЙ РОУТ ОТПРАВКИ QR ЧЕРЕЗ API BREVO ---
-app.post('/api/users/send-qr-email', async (req, res) => {
-    try {
-        const { email, userName, qrImageDataUrl } = req.body;
-
-        if (!email || !userName || !qrImageDataUrl) {
-            return res.status(400).json({ success: false, message: 'Відсутні обов\'язкові дані для відправки!' });
-        }
-
-        // 🌟 ИСПРАВИЛИ КЛЮЧ: Скопируйте и вставьте сюда ваш точный ключ xkeysib-... из Brevo БЕЗ лишних приставок re_
-        const BREVO_API_KEY = "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"; 
-
-        console.log(`Запуск отправки письма через Brevo HTTP API на адрес ${email}...`);
-
-        // Очистка графического кода от лишних символов
-        const base64Content = qrImageDataUrl
-            .replace(/^data:image\/png;base64,/, "")
-            .replace(/\s/g, ''); 
-
-        const response = await fetch('https://brevo.com', {
-            method: 'POST',
-            headers: {
-                'accept': 'application/json',
-                'api-key': BREVO_API_KEY,
-                'content-type': 'application/json'
-            },
-            body: JSON.stringify({
-                // 🌟 ВНИМАНИЕ: Здесь должен быть строго тот email, на который зарегистрирован ваш аккаунт Brevo!
-                sender: { name: 'STRUCTUM Облік Персоналу', email: 'maloshenko1996@gmail.com' },
-                to: [{ email: email.trim(), name: userName }],
-                subject: '🏗️ Ваша електронна перепустка — STRUCTUM',
-                htmlContent: `
-                    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 500px; margin: 0 auto; border: 1px solid #e1e4e8; border-radius: 8px;">
-                        <h2 style="color: #28a745; border-bottom: 2px solid #28a745; padding-bottom: 10px;">Вітаємо, ${userName}!</h2>
-                        <p>Адміністрація компанії <strong>STRUCTUM</strong> сформувала для вас персональну електронну перепустку.</p>
-                        <p>Ваша індивідуальна перепустка з QR-кодом прикріплена файлом до листа.</p>
-                        <p style="background: #f4f6f9; padding: 12px; border-left: 4px solid #007bff; margin: 20px 0; font-size: 14px;">
-                            <strong>Важливо:</strong> Збережіть отримане зображення на телефон та пред'являйте його бригадиру при вході на об'єкт.
-                        </p>
-                        <br>
-                        <small style="color: #888; display: block; border-top: 1px solid #e1e4e8; padding-top: 10px;">Система STRUCTUM.</small>
-                    </div>
-                `,
-                attachments: [
-                    {
-                        name: `Perepustka_${userName.replace(/\s+/g, '_')}.png`,
-                        content: base64Content
-                    }
-                ]
-            })
-        });
-
-        const responseText = await response.text();
-
-        if (response.ok) {
-            console.log(`✅ Письмо успешно отправлено через Brevo API!`);
-            return res.json({ success: true, message: `Перепустку успішно відправлено на пошту!` });
-        } else {
-            // Если Brevo ругается, выводим точный текст ошибки в консоль Render и возвращаем на фронтенд
-            console.error('Ошибка ответа API Brevo:', responseText);
-            
-            // Парсим ошибку, чтобы фронтенд вывел её в alert() вместо безликого 400
-            let errorObj = { message: responseText };
-            try { errorObj = JSON.parse(responseText); } catch(e){}
-            
-            return res.status(400).json({ success: false, message: errorObj.message || errorObj.code || responseText });
-        }
-
-    } catch (error) {
-        console.error('Помилка відправки Email через Brevo API:', error);
-        res.status(500).json({ success: false, message: 'Помилка сервера при відправці листа' });
-    }
-});
-
-
-
-
 mongoose.connect(MONGO_URI)
   .then(() => console.log('🍃 Успешно подключено к MongoDB Atlas!'))
   .catch(err => console.error('❌ Ошибка подключения к базе:', err));
@@ -304,6 +225,7 @@ app.post('/api/tabel/upload', upload.single('excelFile'), async (req, res) => {
         res.status(500).json({ message: 'Ошибка при обработке Excel' });
     }
 });
+
 
 // --- СХЕМА И МОДЕЛЬ ДЛЯ ПОСЕЩЕНИЙ С УЧЕТОМ ОБЪЕКТОВ ---
 const visitSchema = new mongoose.Schema({
