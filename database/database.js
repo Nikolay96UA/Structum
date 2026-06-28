@@ -8,16 +8,16 @@ import nodemailer from 'nodemailer';
 
 
 
-
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    host: 'smtp.gmail.com',     // явно вказуємо
-    port: 465,
-    secure: true,
-    family: 4,                  // ←←← ЦЕ НАЙГОЛОВНІШЕ (примусово IPv4)
-   auth: {
-        user: 'themaxplayn@gmail.com',
-        pass: 'puqmsgqfrwataxel'   // App Password від Google!
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false,           // для 587 порту
+    auth: {
+        user: process.env.BREVO_EMAIL,     // ваш email від Brevo
+        pass: process.env.BREVO_SMTP_KEY   // SMTP ключ
+    },
+    tls: {
+        rejectUnauthorized: false
     }
 });
 
@@ -496,8 +496,10 @@ app.get('/api/attendance/download-excel', async (req, res) => {
 
 
 // ______________________________________
-
 app.post('/api/send-qr', async (req, res) => {
+console.log("Brevo Email:", process.env.BREVO_EMAIL ? "OK" : "НЕ ЗНАЙДЕНО");
+console.log("Brevo Key length:", process.env.BREVO_SMTP_KEY ? process.env.BREVO_SMTP_KEY.length : 0);
+
     const { userId, email, name, qrBase64 } = req.body;
 
     if (!email || !qrBase64) {
@@ -508,14 +510,14 @@ app.post('/api/send-qr', async (req, res) => {
         const base64Data = qrBase64.replace(/^data:image\/png;base64,/, "");
         const imageBuffer = Buffer.from(base64Data, 'base64');
 
-        const info = await transporter.sendMail({
-            from: `"STRUCTUM" <${process.env.EMAIL_USER}>`,
+        await transporter.sendMail({
+            from: `"STRUCTUM" <${process.env.BREVO_EMAIL}>`,
             to: email,
             subject: `Перепустка — ${name || 'Працівник'}`,
             html: `
                 <h2>Ваша електронна перепустка</h2>
-                <p>Добрий день, <strong>${name || 'Колего'}</strong>!</p>
-                <p>Прикріплюємо ваш персональний QR-код.</p>
+                <p>Добрий день, <strong>${name}</strong>!</p>
+                <p>Прикріплюємо ваш персональний QR-код для проходу.</p>
                 <p><strong>ID:</strong> ${userId}</p>
             `,
             attachments: [{
@@ -525,11 +527,9 @@ app.post('/api/send-qr', async (req, res) => {
             }]
         });
 
-        console.log("✅ Email відправлено:", info.messageId);
-        res.json({ success: true, message: "Email відправлено" });
-
+        res.json({ success: true, message: "Email успішно відправлено" });
     } catch (error) {
-        console.error("❌ Помилка відправки email:", error);
+        console.error("Помилка Brevo:", error);
         res.status(500).json({ 
             success: false, 
             message: 'Не вдалося відправити email',
