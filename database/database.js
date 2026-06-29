@@ -10,6 +10,9 @@ import {Resend} from 'resend';
 // Указываем папку со статическими файлами (HTML, CSS, JS фронтенда)
 app.use(express.static('public')); 
 
+const app = express();
+
+
 app.get('/', (req, res) => {
   res.send('<h1>Сервер STRUCTUM работает!</h1>');
 });
@@ -17,7 +20,6 @@ app.get('/', (req, res) => {
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
