@@ -13,9 +13,6 @@ const app = express();
 
 app.use(express.static('public')); 
 
-app.get('/', (req, res) => {
-  res.send('<h1>Сервер STRUCTUM работает!</h1>');
-});
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
