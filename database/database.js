@@ -496,7 +496,7 @@ app.post('/api/send-qr', async (req, res) => {
         const imageBuffer = Buffer.from(base64Data, 'base64');
 
         const { data, error } = await resend.emails.send({
-            from: 'STRUCTUM <http://www.structum-staff.app>',
+            from: 'STRUCTUM <noreply@send.structum-staff.app>',
             to: [email],
             subject: `Перепустка — ${name || 'Працівник'}`,
             html: `
