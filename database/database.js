@@ -10,6 +10,10 @@ import {Resend} from 'resend';
 // Указываем папку со статическими файлами (HTML, CSS, JS фронтенда)
 app.use(express.static('public')); 
 
+app.get('/', (req, res) => {
+  res.send('<h1>Сервер STRUCTUM работает!</h1>');
+});
+
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
