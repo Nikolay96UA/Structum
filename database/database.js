@@ -6,7 +6,6 @@ import * as XLSX from 'xlsx'; // Добавили импорт для чтени
 import ExcelJS from 'exceljs'; // ✅ Теперь всё в едином ES-стиле
 import nodemailer from 'nodemailer';
 import {Resend} from 'resend';
-const app = express();
 
 // Указываем папку со статическими файлами (HTML, CSS, JS фронтенда)
 app.use(express.static('public')); 
