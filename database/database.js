@@ -52,8 +52,8 @@ const User = mongoose.model('User', userSchema);
 // --- МАРШРУТЫ API ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ---
 
 // 1. Получить всех пользователей из базы
-// 1. Получить всех пользователей из базы с актуальной локацией за сегодня
-// 1. Получить всех пользователей с последней исторической локацией и статусом на сегодня
+
+
 app.get('/api/users', async (req, res) => {
     try {
         const users = await User.find().lean();
@@ -317,7 +317,7 @@ app.get('/api/attendance/download-excel', async (req, res) => {
         const endDateStr = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
 
         const workbook = new ExcelJS.Workbook();
-        const sheet = workbook.addWorksheet(`AT-${month}`);
+        const sheet = workbook.addWorksheet(`АТ-2`);
         sheet.views = [{ showGridLines: true }];
 
         // Настройка ширины колонок
