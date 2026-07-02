@@ -603,7 +603,12 @@
             .then((r) => r.json())
             .then((data) => {
               locationSelect.innerHTML = "";
+              if (data.locations.length === 0) {
+                locationSelect.innerHTML =
+                  "<option>Немає створених локацій</option>";
 
+                return;
+              }
               data.locations.forEach((location) => {
                 const option = document.createElement("option");
 
@@ -755,6 +760,7 @@
             user.location = location;
 
             alert("Локацію збережено");
+            loadUsers();
           } else {
             alert(result.message);
           }
@@ -776,8 +782,8 @@
 
         const filtered = allUsers.filter((user) => {
           const userJob = user.job ? user.job.toLowerCase() : "";
-          const userObject = user.lastLocation
-            ? user.lastLocation.toLowerCase()
+          const userObject = user.objectName
+            ? user.objectName.toLowerCase()
             : "";
 
           const matchesName = user.name
@@ -822,12 +828,12 @@
           const response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, job, phone, email,objectName }), // 🌟 Передаем все 4 параметра
+            body: JSON.stringify({ name, job, phone, email, objectName }), // 🌟 Передаем все 4 параметра
           });
 
           if (response.ok) {
             form.reset();
-            document.getElementById("objectName").selectedIndex=0;
+            document.getElementById("objectName").selectedIndex = 0;
             loadUsers(); // Перезагружаем список
           } else {
             alert("Помилка сервера при збереженні");
@@ -884,7 +890,7 @@
           console.error(err);
         }
       }
-      
+
       loadObjectsForFilter();
       loadUsers();
       loadObjectsForSelect();
