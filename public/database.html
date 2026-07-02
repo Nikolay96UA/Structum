@@ -355,7 +355,22 @@
 
           <div>
             <strong>Будівельний об'єкт</strong>
-           <select id="workerObjectSelect">
+            <div>
+              <strong>Будівельний об'єкт</strong>
+
+              <select
+                id="workerObjectSelect"
+                style="
+                  width: 100%;
+                  margin-top: 8px;
+                  padding: 10px;
+                  border: 1px solid #ccc;
+                  border-radius: 4px;
+                "
+              >
+                <option>Завантаження...</option>
+              </select>
+            </div>
           </div>
 
           <div>
@@ -584,8 +599,44 @@
           user.phone || "Немає даних";
         document.getElementById("modalEmail").textContent =
           user.email || "Немає даних";
-        document.getElementById("modalObject").textContent =
-          user.objectName || "Не призначений";
+        const objectSelect = document.getElementById("workerObjectSelect");
+
+        objectSelect.innerHTML = "";
+        fetch("https://structum.onrender.com/api/objects")
+          .then((r) => r.json())
+          .then((data) => {
+            data.objects.forEach((object) => {
+              const option = document.createElement("option");
+
+              option.value = object;
+              option.textContent = object;
+
+              if (object === user.objectName) {
+                option.selected = true;
+              }
+
+              objectSelect.appendChild(option);
+            });
+          });
+
+        objectSelect.onchange = () => {
+          fetch(
+            `https://structum.onrender.com/api/objects/${encodeURIComponent(objectSelect.value)}/locations`,
+          )
+            .then((r) => r.json())
+            .then((data) => {
+              locationSelect.innerHTML = "";
+
+              data.locations.forEach((location) => {
+                const option = document.createElement("option");
+
+                option.value = location;
+                option.textContent = location;
+
+                locationSelect.appendChild(option);
+              });
+            });
+        };
 
         const locationSelect = document.getElementById("workerLocationSelect");
 
@@ -742,9 +793,8 @@
               },
 
               body: JSON.stringify({
-                objectName: user.objectName,
-
-                location,
+                objectName: objectSelect.value,
+                location: locationSelect.value,
               }),
             },
           );
