@@ -1,46 +1,115 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>STRUCTUM — База даних</title>
     <script src="https://cloudflare.com"></script>
 
-
     <style>
-        body { font-family: sans-serif; margin: 40px; background-color: #f4f6f9; color: #333; }
-        header { margin-bottom: 30px; }
-        header a { text-decoration: none; font-weight: bold; color: #28a745; font-size: 18px; letter-spacing: 1px; }
-        form { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 400px; }
-        input, select { width: 100%; box-sizing: border-box; margin: 8px 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; background-color: white; }
-        input:focus, select:focus { border-color: #28a745; outline: none; }
-        button { padding: 10px 15px; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; transition: background 0.2s; }
-        button[type="submit"] { background-color: #28a745; color: white; width: 100%; margin-top: 10px; }
-        button[type="submit"]:hover { background-color: #218838; }
-        .btn-delete { background-color: #dc3545; color: white; }
-        .btn-delete:hover { background-color: #bd2130; }
-        ul { list-style-type: none; padding: 0; max-width: 600px; }
-        li { background: white; padding: 12px 15px; margin-bottom: 8px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; }
+      body {
+        font-family: sans-serif;
+        margin: 40px;
+        background-color: #f4f6f9;
+        color: #333;
+      }
+      header {
+        margin-bottom: 30px;
+      }
+      header a {
+        text-decoration: none;
+        font-weight: bold;
+        color: #28a745;
+        font-size: 18px;
+        letter-spacing: 1px;
+      }
+      form {
+        background: white;
+        padding: 20px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        max-width: 400px;
+      }
+      input,
+      select {
+        width: 100%;
+        box-sizing: border-box;
+        margin: 8px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+        background-color: white;
+      }
+      input:focus,
+      select:focus {
+        border-color: #28a745;
+        outline: none;
+      }
+      button {
+        padding: 10px 15px;
+        cursor: pointer;
+        border-radius: 4px;
+        border: none;
+        font-weight: bold;
+        transition: background 0.2s;
+      }
+      button[type="submit"] {
+        background-color: #28a745;
+        color: white;
+        width: 100%;
+        margin-top: 10px;
+      }
+      button[type="submit"]:hover {
+        background-color: #218838;
+      }
+      .btn-delete {
+        background-color: #dc3545;
+        color: white;
+      }
+      .btn-delete:hover {
+        background-color: #bd2130;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+        max-width: 600px;
+      }
+      li {
+        background: white;
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <header>
-        <a href="./index.html">STRUCTUM облік персоналу</a>
+      <a href="./index.html">STRUCTUM облік персоналу</a>
     </header>
 
     <h2>Додати користувача до бази даних</h2>
     <form id="userForm">
-        <input type="text" id="userName" placeholder="ПІБ працівника" coding="utf-8" required><br>
+      <input
+        type="text"
+        id="userName"
+        placeholder="ПІБ працівника"
+        coding="utf-8"
+        required
+      /><br />
 
-        <!-- 🌟 ВЫПАДАЮЩИЙ СПИСОК ДОЛЖНОСТЕЙ ВМЕСТО СТАРГО INPUT -->
-<div class="form-group">
-    <label for="userJob">Посада працівника</label>
-    <select id="userJob" required>
-        <option value="" disabled selected>Оберіть посаду зі списку</option>
-        
-        <!-- 🌟 ГРУППА: ОСНОВНОЙ ПЕРСОНАЛ -->
-        <optgroup label="Основний персонал">
+      <!-- 🌟 ВЫПАДАЮЩИЙ СПИСОК ДОЛЖНОСТЕЙ ВМЕСТО СТАРГО INPUT -->
+      <div class="form-group">
+        <label for="userJob">Посада працівника</label>
+        <select id="userJob" required>
+          <option value="" disabled selected>Оберіть посаду зі списку</option>
+
+          <!-- 🌟 ГРУППА: ОСНОВНОЙ ПЕРСОНАЛ -->
+          <optgroup label="Основний персонал">
             <option value="монтажник">Монтажник</option>
             <option value="зварник">Зварник</option>
             <option value="електромонтер">Електромонтер</option>
@@ -48,437 +117,777 @@
             <option value="стропальник">Стропальник</option>
             <option value="арматурник">Арматурник</option>
             <option value="підсобник">Підсобник</option>
-        </optgroup>
+          </optgroup>
 
-        <!-- 🌟 ГРУППА: ІТР -->
-        <optgroup label="ІТР">
+          <!-- 🌟 ГРУППА: ІТР -->
+          <optgroup label="ІТР">
             <option value="інженер">Інженер</option>
-            <option value="комірник">Комірник</option> <!-- Заменили кладовий на комірник, как было в твоей базе -->
+            <option value="комірник">Комірник</option>
+            <!-- Заменили кладовий на комірник, как было в твоей базе -->
             <option value="механік">Механік</option>
             <option value="геодезист">Геодезист</option>
             <option value="Начальник бази">Начальник бази</option>
             <option value="начальник дільниці">Начальник дільниці</option>
             <option value="виконроб">Виконроб</option>
-            <option value="Завідувач господарства">Завідувач господарства</option>
+            <option value="Завідувач господарства">
+              Завідувач господарства
+            </option>
             <option value="інженер ПО">Інженер ОП</option>
-        </optgroup>
+          </optgroup>
 
-        <!-- 🌟 ГРУППА: ТРАНСПОРТНИЙ ВІДДІЛ -->
-        <optgroup label="Транспортний відділ">
+          <!-- 🌟 ГРУППА: ТРАНСПОРТНИЙ ВІДДІЛ -->
+          <optgroup label="Транспортний відділ">
             <option value="водій">Водій</option>
             <option value="машиніст автокрана">Машиніст автокрана</option>
-        </optgroup>
-    </select>
+          </optgroup>
+        </select>
 
-     <input type="tel" id="userPhone" placeholder="📞 Номер телефону (наприклад: +380...)" required>
-        <input type="email" id="userEmail" placeholder="✉️ Електронна пошта" required>
-</div>
-        
-        <button type="submit">Сохранить в базу</button>
+        <div class="form-group">
+          <label>Будівельний об'єкт</label>
 
-        <!-- 🌟 БЛОК ДЛЯ ФИЛЬТРАЦИИ И ПОИСКА -->
-<div style="background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 600px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-    
-<!-- 🌟 СИНХРОНИЗИРОВАННЫЙ БЛОК ФИЛЬТРАЦИИ И ПОИСКА -->
-<div style="background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 600px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-    <!-- Поиск по ФИО остается текстовым -->
-    <input type="text" id="searchName" placeholder="🔍 Пошук за ім'ям..." style="flex: 1; min-width: 180px; margin: 0; padding: 8px;">
-    
-    <!-- Фильтр по должности -->
-    <select id="searchJob" style="flex: 1; min-width: 150px; margin: 0; padding: 8px; height: 38px;">
-        <option value="">🛠️ Всі посади</option>
-        <option value="монтажник">Монтажник</option>
-        <option value="зварник">Зварник</option>
-        <option value="електромонтер">Електромонтер</option>
-        <option value="бригадир">Бригадир</option>
-        <option value="стропальник">Стропальник</option>
-        <option value="арматурник">Арматурник</option>
-        <option value="підсобник">Підсобник</option>
-        <option value="інженер">Інженер</option>
-        <option value="комірник">Комірник</option>
-        <option value="механік">Механік</option>
-        <option value="геодезист">Геодезист</option>
-        <option value="Начальник бази">Начальник бази</option>
-        <option value="начальник дільниці">Начальник дільниці</option>
-        <option value="виконроб">Виконроб</option>
-        <option value="Завідувач господарства">Завідувач господарства</option>
-        <option value="інженер ПО">Інженер ПО</option>
-        <option value="водій">Водій</option>
-        <option value="машиніст автокрана">Машиніст автокрана</option>
-    </select>
-    
-    <!-- Фильтр по объектам (заполняется динамически) -->
-    <select id="searchObject" style="flex: 1; min-width: 150px; margin: 0; padding: 8px; height: 38px;">
-        <option value="">🏗️ Всі об'єкти</option>
-    </select>
-</div>
-    </div>
+          <select
+            id="objectName"
+            style="
+              width: 100%;
+              padding: 10px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+            "
+          >
+            <option value="">Завантаження...</option>
+          </select>
+        </div>
 
+        <input
+          type="tel"
+          id="userPhone"
+          placeholder="📞 Номер телефону (наприклад: +380...)"
+          required
+        />
+        <input
+          type="email"
+          id="userEmail"
+          placeholder="✉️ Електронна пошта"
+          required
+        />
+      </div>
 
+      <button type="submit">Сохранить в базу</button>
+
+      <!-- 🌟 БЛОК ДЛЯ ФИЛЬТРАЦИИ И ПОИСКА -->
+      <div
+        style="
+          background: white;
+          padding: 20px;
+          border-radius: 6px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+          max-width: 600px;
+          margin-bottom: 20px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        "
+      >
+        <!-- 🌟 СИНХРОНИЗИРОВАННЫЙ БЛОК ФИЛЬТРАЦИИ И ПОИСКА -->
+        <div
+          style="
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            max-width: 600px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+          "
+        >
+          <!-- Поиск по ФИО остается текстовым -->
+          <input
+            type="text"
+            id="searchName"
+            placeholder="🔍 Пошук за ім'ям..."
+            style="flex: 1; min-width: 180px; margin: 0; padding: 8px"
+          />
+
+          <!-- Фильтр по должности -->
+          <select
+            id="searchJob"
+            style="
+              flex: 1;
+              min-width: 150px;
+              margin: 0;
+              padding: 8px;
+              height: 38px;
+            "
+          >
+            <option value="">🛠️ Всі посади</option>
+            <option value="монтажник">Монтажник</option>
+            <option value="зварник">Зварник</option>
+            <option value="електромонтер">Електромонтер</option>
+            <option value="бригадир">Бригадир</option>
+            <option value="стропальник">Стропальник</option>
+            <option value="арматурник">Арматурник</option>
+            <option value="підсобник">Підсобник</option>
+            <option value="інженер">Інженер</option>
+            <option value="комірник">Комірник</option>
+            <option value="механік">Механік</option>
+            <option value="геодезист">Геодезист</option>
+            <option value="Начальник бази">Начальник бази</option>
+            <option value="начальник дільниці">Начальник дільниці</option>
+            <option value="виконроб">Виконроб</option>
+            <option value="Завідувач господарства">
+              Завідувач господарства
+            </option>
+            <option value="інженер ПО">Інженер ПО</option>
+            <option value="водій">Водій</option>
+            <option value="машиніст автокрана">Машиніст автокрана</option>
+          </select>
+
+          <!-- Фильтр по объектам (заполняется динамически) -->
+          <select
+            id="searchObject"
+            style="
+              flex: 1;
+              min-width: 150px;
+              margin: 0;
+              padding: 8px;
+              height: 38px;
+            "
+          >
+            <option value="">🏗️ Всі об'єкти</option>
+          </select>
+        </div>
+      </div>
     </form>
 
     <h2>Список користувачів в системі:</h2>
     <ul id="usersList"></ul>
 
     <!-- 🌟 МОДАЛЬНОЕ ОКНО КАРТОЧКИ РАБОТНИКА -->
-<div id="workerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
-    <div style="background: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); position: relative; font-family: sans-serif;">
+    <div
+      id="workerModal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      "
+    >
+      <div
+        style="
+          background: white;
+          padding: 30px;
+          border-radius: 8px;
+          width: 100%;
+          max-width: 500px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+          position: relative;
+          font-family: sans-serif;
+        "
+      >
         <!-- Кнопка закрытия -->
-        <span id="closeModal" style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #aaa;">&times;</span>
-        
-        <h3 style="margin-bottom: 20px; border-bottom: 2px solid #28a745; padding-bottom: 10px; color: #333;">🪪 Особова картка працівника</h3>
-        
-        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 16px; margin-bottom: 25px;">
-            <div><strong>ПІБ:</strong> <span id="modalName"></span></div>
-            <div><strong>Посада:</strong> <span id="modalJob"></span></div>
-            <div><strong>Актуальна локація:</strong> <span id="modalLocation"></span></div>
-            <div><strong>Телефон:</strong> <span id="modalPhone"></span></div>
-            <div><strong>Email:</strong> <span id="modalEmail"></span></div>
+        <span
+          id="closeModal"
+          style="
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #aaa;
+          "
+          >&times;</span
+        >
+
+        <h3
+          style="
+            margin-bottom: 20px;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
+            color: #333;
+          "
+        >
+          🪪 Особова картка працівника
+        </h3>
+
+        <div
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 16px;
+            margin-bottom: 25px;
+          "
+        >
+          <div>
+            <strong>ПІБ:</strong>
+            <span id="modalName"></span>
+          </div>
+
+          <div>
+            <strong>Посада:</strong>
+            <span id="modalJob"></span>
+          </div>
+
+          <div>
+            <strong>Остання відмітка:</strong>
+            <span id="modalLocation"></span>
+          </div>
+
+          <div>
+            <strong>Телефон:</strong>
+            <span id="modalPhone"></span>
+          </div>
+
+          <div>
+            <strong>Email:</strong>
+            <span id="modalEmail"></span>
+          </div>
+
+          <hr />
+
+          <div>
+            <strong>Будівельний об'єкт</strong>
+            <div
+              id="modalObject"
+              style="margin-top: 5px; color: #28a745; font-weight: bold"
+            >
+              —
+            </div>
+          </div>
+
+          <div>
+            <strong>Робоча локація</strong>
+
+            <select
+              id="workerLocationSelect"
+              style="margin-top: 8px; width: 100%; padding: 10px"
+            >
+              <option>Завантаження...</option>
+            </select>
+          </div>
+
+          <button
+            id="saveLocationBtn"
+            style="
+              background: #28a745;
+              color: white;
+              padding: 10px;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              font-weight: bold;
+            "
+          >
+            💾 Зберегти локацію
+          </button>
         </div>
 
         <!-- Кнопки действий -->
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            <!-- Ссылка-кнопка для генерации QR кода (перенаправляет на твой генератор с ID) -->
-            <button id="modalQrBtn" href="#" class="btn-action" style="display: block; text-align: center; background: #007bff; color: white; padding: 12px; border-radius: 4px; text-decoration: none; font-weight: bold;">
-                📱 Згенерувати QR-код перепустки
-            </button>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <!-- Ссылка-кнопка для генерации QR кода (перенаправляет на твой генератор с ID) -->
+          <button
+            id="modalQrBtn"
+            href="#"
+            class="btn-action"
+            style="
+              display: block;
+              text-align: center;
+              background: #007bff;
+              color: white;
+              padding: 12px;
+              border-radius: 4px;
+              text-decoration: none;
+              font-weight: bold;
+            "
+          >
+            📱 Згенерувати QR-код перепустки
+          </button>
 
+          <!-- Скрытый невидимый блок, где скрипт будет тайно создавать картинку QR-кода для скачивания -->
+          <div id="hiddenQrContainer" style="display: none"></div>
 
-
-<!-- Скрытый невидимый блок, где скрипт будет тайно создавать картинку QR-кода для скачивания -->
-<div id="hiddenQrContainer" style="display: none;"></div>
-
-            <!-- Кнопка скачивания табеля объекта, на котором он находится -->
-            <a id="modalExcelBtn" href="#" class="btn-action" style="display: block; text-align: center; background: #28a745; color: white; padding: 12px; border-radius: 4px; text-decoration: none; font-weight: bold;">
-                📊 Скачати табель цього об'єкта
-            </a>
+          <!-- Кнопка скачивания табеля объекта, на котором он находится -->
+          <a
+            id="modalExcelBtn"
+            href="#"
+            class="btn-action"
+            style="
+              display: block;
+              text-align: center;
+              background: #28a745;
+              color: white;
+              padding: 12px;
+              border-radius: 4px;
+              text-decoration: none;
+              font-weight: bold;
+            "
+          >
+            📊 Скачати табель цього об'єкта
+          </a>
         </div>
+      </div>
     </div>
-</div>
 
+    <script>
+      const form = document.getElementById("userForm");
+      const list = document.getElementById("usersList");
+      const API_URL = "https://structum.onrender.com/api/users";
+      const OBJECTS_API_URL = "https://structum.onrender.com/api/objects"; // Роут для списка объектов
 
-<script>
-    const form = document.getElementById('userForm');
-    const list = document.getElementById('usersList');
-   const API_URL = 'https://structum.onrender.com/api/users';
-    const OBJECTS_API_URL = 'https://structum.onrender.com/api/objects'; // Роут для списка объектов
-
-    // 🌟 ФУНКЦІЯ ЗАВАНТАЖЕННЯ QRious
-const ensureQRiousLoaded = () => {
-    return new Promise((resolve, reject) => {
-        if (typeof QRious !== 'undefined') {
+      // 🌟 ФУНКЦІЯ ЗАВАНТАЖЕННЯ QRious
+      const ensureQRiousLoaded = () => {
+        return new Promise((resolve, reject) => {
+          if (typeof QRious !== "undefined") {
             resolve();
             return;
-        }
-        console.warn("QRious не знайдено. Завантажуємо...");
-        
-        const script = document.createElement('script');
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js";
-        script.onload = () => {
+          }
+          console.warn("QRious не знайдено. Завантажуємо...");
+
+          const script = document.createElement("script");
+          script.src =
+            "https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js";
+          script.onload = () => {
             console.log("✅ QRious завантажено");
             resolve();
-        };
-        script.onerror = () => reject(new Error("Не вдалося завантажити QRious"));
-        document.head.appendChild(script);
-    });
-};
-    
-    let allUsers = []; 
-
-    async function loadObjectsForFilter() {
-        try {
-            const response = await fetch(OBJECTS_API_URL);
-            const data = await response.json();
-            if (data.success && data.objects.length > 0) {
-                const objectSelect = document.getElementById('searchObject');
-                data.objects.forEach(objName => {
-                    const option = document.createElement('option');
-                    option.value = objName.toLowerCase(); 
-                    option.textContent = objName;
-                    objectSelect.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('Не вдалося завантажити об\'єкти для фільтра:', error);
-        }
-    }
-
-    async function loadUsers() {
-        list.innerHTML = 'Завантаження...';
-        try {
-            const response = await fetch(API_URL);
-            allUsers = await response.json(); 
-            renderUsers(allUsers); 
-        } catch (error) {
-            list.innerHTML = 'Помилка підключення до сервера Node.js';
-            console.error(error);
-        }
-    }
-
-    function renderUsers(usersToRender) {
-        list.innerHTML = ''; 
-        
-        if (usersToRender.length === 0) {
-            list.innerHTML = '<li style="color: #999; justify-content: center; background: white; padding: 12px 15px; border-radius: 4px;">Нікого не знайдено за такими критеріями</li>';
-            return;
-        }
-        
-        usersToRender.forEach((user, index) => {
-            const li = document.createElement('li');
-
-            const infoDiv = document.createElement('div');
-            infoDiv.style.display = 'flex';
-            infoDiv.style.alignItems = 'center';
-            infoDiv.style.gap = '15px';
-            infoDiv.style.flexWrap = 'wrap';
-
-            const mainText = document.createElement('span');
-            mainText.textContent = `№${index + 1} | ${user.name} (${user.job})`;
-            infoDiv.appendChild(mainText);
-
-            const locationBadge = document.createElement('span');
-            locationBadge.style.fontSize = '12px';
-            locationBadge.style.fontWeight = 'bold';
-            locationBadge.style.padding = '4px 10px';
-            locationBadge.style.borderRadius = '20px';
-            
-            if (user.isScannedToday) {
-                locationBadge.textContent = `🟢 Сьогодні на: ${user.lastLocation}`;
-                locationBadge.style.backgroundColor = '#d4edda';
-                locationBadge.style.color = '#155724';
-            } else {
-                if (user.lastLocation === 'Немає відміток') {
-                    locationBadge.textContent = '🔴 Не відмічений взагалі';
-                } else {
-                    locationBadge.textContent = `🔴 Сьогодні ніде (остання: ${user.lastLocation})`;
-                }
-                locationBadge.style.backgroundColor = '#f8d7da';
-                locationBadge.style.color = '#721c24';
-            }
-            
-            infoDiv.appendChild(locationBadge);
-            li.appendChild(infoDiv);
-
-            // КОНТЕЙНЕР ДЛЯ КНОПОК ДЕЙСТВИЙ РЯДОМ С ИМЕНЕМ
-            const actionsDiv = document.createElement('div');
-            actionsDiv.style.display = 'flex';
-            actionsDiv.style.gap = '8px';
-
-            // 🌟 КНОПКА ОТКРЫТИЯ КАРТОЧКИ (МОДАЛЬНОГО ОКНА)
-            const cardBtn = document.createElement('button');
-            cardBtn.textContent = 'Картка';
-            cardBtn.style.backgroundColor = '#007bff';
-            cardBtn.style.color = 'white';
-            cardBtn.style.padding = '6px 12px';
-            cardBtn.style.borderRadius = '4px';
-            cardBtn.style.cursor = 'pointer';
-            cardBtn.addEventListener('click', () => openWorkerModal(user));
-            actionsDiv.appendChild(cardBtn);
-
-            // Кнопка удаления (увольнения)
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = 'Звільнений';
-            deleteBtn.className = 'btn-delete';
-            deleteBtn.style.padding = '6px 12px';
-            deleteBtn.style.borderRadius = '4px';
-            deleteBtn.addEventListener('click', async () => {
-                if (confirm(`Ви впевнені, що хочете видалити ${user.name}?`)) {
-                    await deleteUser(user._id);
-                }
-            });
-            actionsDiv.appendChild(deleteBtn);
-
-            li.appendChild(actionsDiv);
-            list.appendChild(li);
+          };
+          script.onerror = () =>
+            reject(new Error("Не вдалося завантажити QRious"));
+          document.head.appendChild(script);
         });
-    }
+      };
 
+      let allUsers = [];
 
-
-// 🌟 ОБНОВЛЕННАЯ ФУНКЦИЯ КАРТОЧКИ — С ГЕНЕРАЦИЕЙ 100% УНИКАЛЬНЫХ И НАСТОЯЩИХ QR
-// 🌟 АДАПТИРОВАННАЯ ФУНКЦИЯ КАРТОЧКИ С ТВОИМ ГЕНЕРАТОРОМ QRious И АВТОСКАЧИВАНИЕМ
-// 🌟 ОНОВЛЕНА ФУНКЦІЯ З АВТОМАТИЧНОЮ ВІДПРАВКОЮ НА EMAIL
-function openWorkerModal(user) {
-    document.getElementById('modalName').textContent = user.name || 'Не вказано';
-    document.getElementById('modalJob').textContent = user.job || 'Не вказано';
-    document.getElementById('modalLocation').textContent = user.lastLocation || 'Немає відміток';
-    document.getElementById('modalPhone').textContent = user.phone || 'Немає даних';
-    document.getElementById('modalEmail').textContent = user.email || 'Немає даних';
-
-    // Excel кнопка
-    const excelBtn = document.getElementById('modalExcelBtn');
-    if (user.lastLocation && 
-        user.lastLocation !== 'Немає відміток' && 
-        !user.lastLocation.includes('Сьогодні ніде') &&
-        user.lastLocation !== 'Не відмічений') {
-        
-        excelBtn.href = `https://structum.onrender.com/api/attendance/download-excel?objectName=${encodeURIComponent(user.lastLocation)}`;
-        excelBtn.style.display = 'block';
-    } else {
-        excelBtn.style.display = 'none';
-    }
-
-    // Клон кнопки QR щоб уникнути дублювання подій
-    const oldQrBtn = document.getElementById('modalQrBtn');
-    const qrBtn = oldQrBtn.cloneNode(true);
-    oldQrBtn.parentNode.replaceChild(qrBtn, oldQrBtn);
-
-    qrBtn.addEventListener('click', async () => {
-        if (!user._id) {
-            alert('Помилка: Відсутній ID працівника!');
-            return;
-        }
-        if (!user.email) {
-            alert('Помилка: У працівника не вказаний email!');
-            return;
-        }
-
+      async function loadObjectsForFilter() {
         try {
+          const response = await fetch(OBJECTS_API_URL);
+          const data = await response.json();
+          if (data.success && data.objects.length > 0) {
+            const objectSelect = document.getElementById("searchObject");
+            data.objects.forEach((objName) => {
+              const option = document.createElement("option");
+              option.value = objName.toLowerCase();
+              option.textContent = objName;
+              objectSelect.appendChild(option);
+            });
+          }
+        } catch (error) {
+          console.error("Не вдалося завантажити об'єкти для фільтра:", error);
+        }
+      }
+
+      async function loadUsers() {
+        list.innerHTML = "Завантаження...";
+        try {
+          const response = await fetch(API_URL);
+          allUsers = await response.json();
+          renderUsers(allUsers);
+        } catch (error) {
+          list.innerHTML = "Помилка підключення до сервера Node.js";
+          console.error(error);
+        }
+      }
+
+      function renderUsers(usersToRender) {
+        list.innerHTML = "";
+
+        if (usersToRender.length === 0) {
+          list.innerHTML =
+            '<li style="color: #999; justify-content: center; background: white; padding: 12px 15px; border-radius: 4px;">Нікого не знайдено за такими критеріями</li>';
+          return;
+        }
+
+        usersToRender.forEach((user, index) => {
+          const li = document.createElement("li");
+
+          const infoDiv = document.createElement("div");
+          infoDiv.style.display = "flex";
+          infoDiv.style.alignItems = "center";
+          infoDiv.style.gap = "15px";
+          infoDiv.style.flexWrap = "wrap";
+
+          const mainText = document.createElement("span");
+          mainText.textContent = `№${index + 1} | ${user.name} (${user.job})`;
+          infoDiv.appendChild(mainText);
+
+          const locationBadge = document.createElement("span");
+          locationBadge.style.fontSize = "12px";
+          locationBadge.style.fontWeight = "bold";
+          locationBadge.style.padding = "4px 10px";
+          locationBadge.style.borderRadius = "20px";
+
+          if (user.isScannedToday) {
+            locationBadge.textContent = `🟢 Сьогодні на: ${user.lastLocation}`;
+            locationBadge.style.backgroundColor = "#d4edda";
+            locationBadge.style.color = "#155724";
+          } else {
+            if (user.lastLocation === "Немає відміток") {
+              locationBadge.textContent = "🔴 Не відмічений взагалі";
+            } else {
+              locationBadge.textContent = `🔴 Сьогодні ніде (остання: ${user.lastLocation})`;
+            }
+            locationBadge.style.backgroundColor = "#f8d7da";
+            locationBadge.style.color = "#721c24";
+          }
+
+          infoDiv.appendChild(locationBadge);
+          li.appendChild(infoDiv);
+
+          // КОНТЕЙНЕР ДЛЯ КНОПОК ДЕЙСТВИЙ РЯДОМ С ИМЕНЕМ
+          const actionsDiv = document.createElement("div");
+          actionsDiv.style.display = "flex";
+          actionsDiv.style.gap = "8px";
+
+          // 🌟 КНОПКА ОТКРЫТИЯ КАРТОЧКИ (МОДАЛЬНОГО ОКНА)
+          const cardBtn = document.createElement("button");
+          cardBtn.textContent = "Картка";
+          cardBtn.style.backgroundColor = "#007bff";
+          cardBtn.style.color = "white";
+          cardBtn.style.padding = "6px 12px";
+          cardBtn.style.borderRadius = "4px";
+          cardBtn.style.cursor = "pointer";
+          cardBtn.addEventListener("click", () => openWorkerModal(user));
+          actionsDiv.appendChild(cardBtn);
+
+          // Кнопка удаления (увольнения)
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "Звільнений";
+          deleteBtn.className = "btn-delete";
+          deleteBtn.style.padding = "6px 12px";
+          deleteBtn.style.borderRadius = "4px";
+          deleteBtn.addEventListener("click", async () => {
+            if (confirm(`Ви впевнені, що хочете видалити ${user.name}?`)) {
+              await deleteUser(user._id);
+            }
+          });
+          actionsDiv.appendChild(deleteBtn);
+
+          li.appendChild(actionsDiv);
+          list.appendChild(li);
+        });
+      }
+
+      // 🌟 ОБНОВЛЕННАЯ ФУНКЦИЯ КАРТОЧКИ — С ГЕНЕРАЦИЕЙ 100% УНИКАЛЬНЫХ И НАСТОЯЩИХ QR
+      // 🌟 АДАПТИРОВАННАЯ ФУНКЦИЯ КАРТОЧКИ С ТВОИМ ГЕНЕРАТОРОМ QRious И АВТОСКАЧИВАНИЕМ
+      // 🌟 ОНОВЛЕНА ФУНКЦІЯ З АВТОМАТИЧНОЮ ВІДПРАВКОЮ НА EMAIL
+      function openWorkerModal(user) {
+        document.getElementById("modalName").textContent =
+          user.name || "Не вказано";
+        document.getElementById("modalJob").textContent =
+          user.job || "Не вказано";
+        document.getElementById("modalLocation").textContent =
+          user.lastLocation || "Немає відміток";
+        document.getElementById("modalPhone").textContent =
+          user.phone || "Немає даних";
+        document.getElementById("modalEmail").textContent =
+          user.email || "Немає даних";
+        document.getElementById("modalObject").textContent =
+          user.objectName || "Не призначений";
+
+        const locationSelect = document.getElementById("workerLocationSelect");
+
+        locationSelect.innerHTML = "<option>Завантаження...</option>";
+
+        if (user.objectName) {
+          fetch(
+            `https://structum.onrender.com/api/objects/${encodeURIComponent(user.objectName)}/locations`,
+          )
+            .then((r) => r.json())
+            .then((data) => {
+              locationSelect.innerHTML = "";
+
+              data.locations.forEach((location) => {
+                const option = document.createElement("option");
+
+                option.value = location;
+
+                option.textContent = location;
+
+                if (location === user.location) {
+                  option.selected = true;
+                }
+
+                locationSelect.appendChild(option);
+              });
+            });
+        } else {
+          locationSelect.innerHTML =
+            "<option>Спочатку призначте об'єкт</option>";
+        }
+
+        // Excel кнопка
+        const excelBtn = document.getElementById("modalExcelBtn");
+        if (
+          user.lastLocation &&
+          user.lastLocation !== "Немає відміток" &&
+          !user.lastLocation.includes("Сьогодні ніде") &&
+          user.lastLocation !== "Не відмічений"
+        ) {
+          excelBtn.href = `https://structum.onrender.com/api/attendance/download-excel?objectName=${encodeURIComponent(user.lastLocation)}`;
+          excelBtn.style.display = "block";
+        } else {
+          excelBtn.style.display = "none";
+        }
+
+        // Клон кнопки QR щоб уникнути дублювання подій
+        const oldQrBtn = document.getElementById("modalQrBtn");
+        const qrBtn = oldQrBtn.cloneNode(true);
+        oldQrBtn.parentNode.replaceChild(qrBtn, oldQrBtn);
+
+        qrBtn.addEventListener("click", async () => {
+          if (!user._id) {
+            alert("Помилка: Відсутній ID працівника!");
+            return;
+          }
+          if (!user.email) {
+            alert("Помилка: У працівника не вказаний email!");
+            return;
+          }
+
+          try {
             await ensureQRiousLoaded();
 
             const size = 500;
-            const qrCanvas = document.createElement('canvas');
+            const qrCanvas = document.createElement("canvas");
 
             new QRious({
-                element: qrCanvas,
-                value: user._id.toString(),
-                size: size,
-                level: 'H'
+              element: qrCanvas,
+              value: user._id.toString(),
+              size: size,
+              level: "H",
             });
 
-            const finalCanvas = document.createElement('canvas');
+            const finalCanvas = document.createElement("canvas");
             finalCanvas.width = size;
             finalCanvas.height = size;
-            const ctx = finalCanvas.getContext('2d');
+            const ctx = finalCanvas.getContext("2d");
 
-            ctx.fillStyle = '#FFFFFF';
+            ctx.fillStyle = "#FFFFFF";
             ctx.fillRect(0, 0, size, size);
             ctx.drawImage(qrCanvas, 30, 20, size - 60, size - 90);
 
-            ctx.fillStyle = '#333';
-            ctx.font = 'bold 18px Arial';
-            ctx.textAlign = 'center';
+            ctx.fillStyle = "#333";
+            ctx.font = "bold 18px Arial";
+            ctx.textAlign = "center";
             ctx.fillText(user.name, size / 2, size - 45);
 
-            ctx.fillStyle = '#666';
-            ctx.font = '12px Arial';
+            ctx.fillStyle = "#666";
+            ctx.font = "12px Arial";
             ctx.fillText(`ID: ${user._id}`, size / 2, size - 20);
 
-            const base64Image = finalCanvas.toDataURL('image/png');
+            const base64Image = finalCanvas.toDataURL("image/png");
 
             // Скачування
-            const link = document.createElement('a');
+            const link = document.createElement("a");
             link.href = base64Image;
-            link.download = `Перепустка_${(user.name || 'працівник').replace(/\s+/g, '_')}.png`;
+            link.download = `Перепустка_${(user.name || "працівник").replace(/\s+/g, "_")}.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
             // Відправка на email
-            const response = await fetch('https://structum.onrender.com/api/send-qr', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const response = await fetch(
+              "https://structum.onrender.com/api/send-qr",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    userId: user._id,
-                    email: user.email,
-                    name: user.name,
-                    qrBase64: base64Image
-                })
-            });
+                  userId: user._id,
+                  email: user.email,
+                  name: user.name,
+                  qrBase64: base64Image,
+                }),
+              },
+            );
 
             const result = await response.json();
 
             if (result.success) {
-                alert(`✅ QR-код відправлено на ${user.email}`);
+              alert(`✅ QR-код відправлено на ${user.email}`);
             } else {
-                console.warn(result);
-                alert('QR завантажено, але email не відправився.');
+              console.warn(result);
+              alert("QR завантажено, але email не відправився.");
             }
-
-        } catch (err) {
+          } catch (err) {
             console.error(err);
-            alert('Помилка генерації QR-коду');
+            alert("Помилка генерації QR-коду");
+          }
+        });
+
+        document.getElementById("saveLocationBtn").onclick = async () => {
+          if (!user.objectName) {
+            alert("Працівник не має об'єкта.");
+
+            return;
+          }
+
+          const location = locationSelect.value;
+
+          const response = await fetch(
+            `https://structum.onrender.com/api/users/${user._id}/location`,
+
+            {
+              method: "PUT",
+
+              headers: {
+                "Content-Type": "application/json",
+              },
+
+              body: JSON.stringify({
+                objectName: user.objectName,
+
+                location,
+              }),
+            },
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            user.location = location;
+
+            alert("Локацію збережено");
+          } else {
+            alert(result.message);
+          }
+        };
+        document.getElementById("workerModal").style.display = "flex";
+      }
+
+      function filterUsers() {
+        const nameQuery = document
+          .getElementById("searchName")
+          .value.toLowerCase()
+          .trim();
+        const jobQuery = document
+          .getElementById("searchJob")
+          .value.toLowerCase();
+        const objectQuery = document
+          .getElementById("searchObject")
+          .value.toLowerCase();
+
+        const filtered = allUsers.filter((user) => {
+          const userJob = user.job ? user.job.toLowerCase() : "";
+          const userObject = user.lastLocation
+            ? user.lastLocation.toLowerCase()
+            : "";
+
+          const matchesName = user.name
+            ? user.name.toLowerCase().includes(nameQuery)
+            : false;
+          const matchesJob = jobQuery === "" ? true : userJob === jobQuery;
+          const matchesObject =
+            objectQuery === "" ? true : userObject === objectQuery;
+
+          return matchesName && matchesJob && matchesObject;
+        });
+
+        renderUsers(filtered);
+      }
+
+      async function deleteUser(id) {
+        try {
+          const response = await fetch(`${API_URL}/${id}`, {
+            method: "DELETE",
+          });
+          if (response.ok) {
+            loadUsers();
+          } else {
+            alert("Не вдалося видалити користувача");
+          }
+        } catch (error) {
+          console.error(error);
+          alert("Сталась помилка");
         }
-    });
+      }
 
-    document.getElementById('workerModal').style.display = 'flex';
-}
+      // 🌟 ОБНОВЛЕННЫЙ ОБРАБОТЧИК ФОРМЫ (ПЕРЕДАЕТ ТЕЛЕФОН И EMAIL)
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-function filterUsers() {
-    const nameQuery = document.getElementById('searchName').value.toLowerCase().trim();
-    const jobQuery = document.getElementById('searchJob').value.toLowerCase();
-    const objectQuery = document.getElementById('searchObject').value.toLowerCase();
+        const name = document.getElementById("userName").value.trim();
+        const job = document.getElementById("userJob").value;
+        const phone = document.getElementById("userPhone").value.trim(); // Считываем
+        const email = document.getElementById("userEmail").value.trim(); // Считываем email
+        const objectName = document.getElementById("objectName").value;
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, job, phone, email,objectName }), // 🌟 Передаем все 4 параметра
+          });
 
-    const filtered = allUsers.filter(user => {
-        const userJob = user.job ? user.job.toLowerCase() : '';
-        const userObject = user.lastLocation ? user.lastLocation.toLowerCase() : '';
+          if (response.ok) {
+            form.reset();
+            document.getElementById("objectName").selectedIndex=0;
+            loadUsers(); // Перезагружаем список
+          } else {
+            alert("Помилка сервера при збереженні");
+          }
+        } catch (error) {
+          alert("Не вдалося зберегти дані.");
+        }
+      });
 
-        const matchesName = user.name ? user.name.toLowerCase().includes(nameQuery) : false;
-        const matchesJob = jobQuery === '' ? true : userJob === jobQuery;
-        const matchesObject = objectQuery === '' ? true : userObject === objectQuery;
+      // ЗАКРЫТИЕ МОДАЛЬНОГО ОКНА
+      document.getElementById("closeModal").addEventListener("click", () => {
+        document.getElementById("workerModal").style.display = "none";
+      });
 
-        return matchesName && matchesJob && matchesObject;
-    });
+      window.addEventListener("click", (e) => {
+        const modal = document.getElementById("workerModal");
+        if (e.target === modal) modal.style.display = "none";
+      });
 
-    renderUsers(filtered);
-}
+      document.addEventListener("DOMContentLoaded", () => {
+        document
+          .getElementById("searchName")
+          .addEventListener("input", filterUsers);
+        document
+          .getElementById("searchJob")
+          .addEventListener("change", filterUsers);
+        document
+          .getElementById("searchObject")
+          .addEventListener("change", filterUsers);
+      });
 
-async function deleteUser(id) {
-    try {
-        const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        if (response.ok) { loadUsers(); } else { alert('Не вдалося видалити користувача'); }
-    } catch (error) { console.error(error); alert('Сталась помилка'); }
-}
-
-    // 🌟 ОБНОВЛЕННЫЙ ОБРАБОТЧИК ФОРМЫ (ПЕРЕДАЕТ ТЕЛЕФОН И EMAIL)
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault(); 
-        
-        const name = document.getElementById('userName').value.trim();
-        const job = document.getElementById('userJob').value; 
-        const phone = document.getElementById('userPhone').value.trim(); // Считываем 
-        const email = document.getElementById('userEmail').value.trim(); // Считываем email
+      async function loadObjectsForSelect() {
+        const select = document.getElementById("objectName");
 
         try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, job, phone, email }) // 🌟 Передаем все 4 параметра
-            });
-            
-            if (response.ok) { 
-                form.reset(); 
-                loadUsers(); // Перезагружаем список
-            } else {
-                alert('Помилка сервера при збереженні');
-            }
-        } catch (error) { 
-            alert('Не вдалося зберегти дані.'); 
+          const response = await fetch(
+            "https://structum.onrender.com/api/objects",
+          );
+
+          const result = await response.json();
+
+          select.innerHTML = "";
+
+          result.objects.forEach((object) => {
+            const option = document.createElement("option");
+
+            option.value = object;
+
+            option.textContent = object;
+
+            select.appendChild(option);
+          });
+        } catch (err) {
+          console.error(err);
         }
-    });
-
-
-// ЗАКРЫТИЕ МОДАЛЬНОГО ОКНА
-document.getElementById('closeModal').addEventListener('click', () => {
-    document.getElementById('workerModal').style.display = 'none';
-});
-window.addEventListener('click', (e) => {
-    const modal = document.getElementById('workerModal');
-    if (e.target === modal) modal.style.display = 'none';
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('searchName').addEventListener('input', filterUsers);
-    document.getElementById('searchJob').addEventListener('change', filterUsers);   
-    document.getElementById('searchObject').addEventListener('change', filterUsers);
-});
-
-loadObjectsForFilter(); 
-loadUsers();            
-</script>
-
-
-
-
-</body>
+      }
+      
+      loadObjectsForFilter();
+      loadUsers();
+      loadObjectsForSelect();
+    </script>
+  </body>
 </html>
