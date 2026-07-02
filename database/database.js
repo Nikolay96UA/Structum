@@ -383,234 +383,255 @@ app.get("/api/attendance/download-excel", async (req, res) => {
     const endDateStr = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
 
     const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet(`АТ-2`);
-    sheet.views = [{ showGridLines: true }];
+    const object = await ConstructionObject.findOne({
+      name: objectName,
+    });
 
-    // Настройка ширины колонок
-    sheet.getColumn(1).width = 4;
-    sheet.getColumn(2).width = 32;
-    sheet.getColumn(3).width = 14;
-    for (let d = 1; d <= daysInMonth; d++) {
-      sheet.getColumn(3 + d).width = 3.2;
-    }
-    const startFinanceCol = 4 + daysInMonth;
-    sheet.getColumn(startFinanceCol).width = 7;
-    sheet.getColumn(startFinanceCol + 1).width = 6;
-    sheet.getColumn(startFinanceCol + 2).width = 6;
-    sheet.getColumn(startFinanceCol + 3).width = 8;
-    sheet.getColumn(startFinanceCol + 4).width = 8;
-    sheet.getColumn(startFinanceCol + 5).width = 8;
-    sheet.getColumn(startFinanceCol + 6).width = 8;
-    sheet.getColumn(startFinanceCol + 7).width = 9;
-    sheet.getColumn(startFinanceCol + 8).width = 15;
+    const locations = object?.locations || [];
 
-    const thinBorder = {
-      top: { style: "thin", color: { argb: "BFBFBF" } },
-      left: { style: "thin", color: { argb: "BFBFBF" } },
-      bottom: { style: "thin", color: { argb: "BFBFBF" } },
-      right: { style: "thin", color: { argb: "BFBFBF" } },
-    };
+    for (const location of locations) {
+      const sheet = workbook.addWorksheet(location);
+      sheet.views = [{ showGridLines: true }];
 
-    // Шапка таблицы
-    sheet.mergeCells(`D1:${sheet.getCell(1, 3 + daysInMonth).address}`);
-    const monthCell = sheet.getCell("D1");
-    monthCell.value = `Табель: ${objectName} — Місяць ${month}.${year}`;
-    monthCell.font = {
-      name: "Times New Roman",
-      size: 10,
-      bold: true,
-      color: { argb: "FF0000" },
-    };
-    monthCell.alignment = { horizontal: "center", vertical: "middle" };
+      // Настройка ширины колонок
+      sheet.getColumn(1).width = 4;
+      sheet.getColumn(2).width = 32;
+      sheet.getColumn(3).width = 14;
+      for (let d = 1; d <= daysInMonth; d++) {
+        sheet.getColumn(3 + d).width = 3.2;
+      }
+      const startFinanceCol = 4 + daysInMonth;
+      sheet.getColumn(startFinanceCol).width = 7;
+      sheet.getColumn(startFinanceCol + 1).width = 6;
+      sheet.getColumn(startFinanceCol + 2).width = 6;
+      sheet.getColumn(startFinanceCol + 3).width = 8;
+      sheet.getColumn(startFinanceCol + 4).width = 8;
+      sheet.getColumn(startFinanceCol + 5).width = 8;
+      sheet.getColumn(startFinanceCol + 6).width = 8;
+      sheet.getColumn(startFinanceCol + 7).width = 9;
+      sheet.getColumn(startFinanceCol + 8).width = 15;
 
-    sheet.mergeCells(`A2:${sheet.getCell(2, 3 + daysInMonth).address}`);
-    sheet.getCell("A2").value = "Загальнобудівельні роботи";
-    sheet.getCell("A2").font = {
-      name: "Times New Roman",
-      size: 10,
-      bold: true,
-    };
-    sheet.getCell("A2").alignment = {
-      horizontal: "center",
-      vertical: "middle",
-    };
-    for (let col = 1; col <= startFinanceCol + 8; col++) {
-      sheet.getCell(2, col).fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "E2EFDA" },
+      const thinBorder = {
+        top: { style: "thin", color: { argb: "BFBFBF" } },
+        left: { style: "thin", color: { argb: "BFBFBF" } },
+        bottom: { style: "thin", color: { argb: "BFBFBF" } },
+        right: { style: "thin", color: { argb: "BFBFBF" } },
       };
-      sheet.getCell(2, col).border = thinBorder;
-    }
 
-    const row3 = sheet.getRow(3);
-    row3.height = 20;
-    row3.values = [
-      "№",
-      "ПІБ",
-      "Посада",
-      ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-      "Днів",
-      "Днів 2",
-      "Тариф1",
-      "Тариф 2",
-      "Додано",
-      "Утримано",
-      "Сума",
-      "Примітки",
-    ];
+      // Шапка таблицы
+      sheet.mergeCells(`D1:${sheet.getCell(1, 3 + daysInMonth).address}`);
+      const monthCell = sheet.getCell("D1");
+      monthCell.value = `Табель: ${objectName}
+Локація: ${location}
+Місяць ${month}.${year}`;
+      monthCell.font = {
+        name: "Times New Roman",
+        size: 10,
+        bold: true,
+        color: { argb: "FF0000" },
+      };
+      monthCell.alignment = { horizontal: "center", vertical: "middle" };
 
-    for (let col = 1; col <= startFinanceCol + 8; col++) {
-      const cell = sheet.getCell(3, col);
-      cell.font = { name: "Times New Roman", size: 9, bold: true };
-      cell.alignment = {
+      sheet.mergeCells(`A2:${sheet.getCell(2, 3 + daysInMonth).address}`);
+      sheet.getCell("A2").value = "Загальнобудівельні роботи";
+      sheet.getCell("A2").font = {
+        name: "Times New Roman",
+        size: 10,
+        bold: true,
+      };
+      sheet.getCell("A2").alignment = {
         horizontal: "center",
         vertical: "middle",
-        wrapText: true,
       };
-      cell.border = thinBorder;
-
-      if (col >= 4 && col <= 3 + daysInMonth) {
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFC000" },
-        };
-      } else if (col === startFinanceCol) {
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFF2CC" },
-        };
-      } else if (col === startFinanceCol + 1 || col === startFinanceCol + 2) {
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "DDEBF7" },
-        };
-      } else if (col === startFinanceCol + 5) {
-        cell.fill = {
+      for (let col = 1; col <= startFinanceCol + 8; col++) {
+        sheet.getCell(2, col).fill = {
           type: "pattern",
           pattern: "solid",
           fgColor: { argb: "E2EFDA" },
         };
-      } else if (col === startFinanceCol + 6) {
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FCE4D6" },
-        };
-      } else {
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "F2F2F2" },
-        };
-      }
-    }
-
-    // Загружаем только те визиты, которые относятся к этому объекту в отчетном месяце
-    const objectVisits = await Visit.find({
-      objectName: objectName,
-      dateString: { $gte: startDateStr, $lt: endDateStr },
-    });
-
-    // Вытаскиваем уникальные ID сотрудников, которые отметились на этом объекте хоть раз
-    const uniqueUserIds = [
-      ...new Set(
-        objectVisits.map((v) => (v.userId ? v.userId.toString() : null)),
-      ),
-    ].filter(Boolean);
-
-    // Загружаем из базы карточки ТОЛЬКО этих сотрудников (и сортируем по имени)
-    const users = await User.find({ _id: { $in: uniqueUserIds } }).sort({
-      name: 1,
-    });
-
-    // Заполняем строки данными сотрудников
-    users.forEach((user, index) => {
-      const rowIndex = 4 + index;
-      const row = sheet.getRow(rowIndex);
-      row.height = 18;
-
-      row.getCell(1).value = index + 1;
-      row.getCell(2).value = user.name || "Без імені";
-      row.getCell(3).value = user.job || "Робітник";
-
-      let workedDaysCount = 0;
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        const colIndex = 3 + day;
-        const currentDayStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-
-        const hasScan = objectVisits.some(
-          (visit) =>
-            visit.userId &&
-            visit.userId.toString() === user._id.toString() &&
-            visit.dateString === currentDayStr,
-        );
-
-        const dayCell = row.getCell(colIndex);
-        if (hasScan) {
-          dayCell.value = 8;
-          workedDaysCount++;
-        } else {
-          dayCell.value = "";
-        }
-
-        dayCell.alignment = { horizontal: "center", vertical: "middle" };
-        dayCell.font = { name: "Times New Roman", size: 9 };
-        dayCell.border = thinBorder;
+        sheet.getCell(2, col).border = thinBorder;
       }
 
-      const colBorg = 4 + daysInMonth;
-      const colDniv = colBorg + 1;
-      const colDniv2 = colBorg + 2;
-      const colTarif1 = colBorg + 3;
-      const colTarif2 = colBorg + 4;
-      const colDodano = colBorg + 5;
-      const colUtrimano = colBorg + 6;
-      const colSuma = colBorg + 7;
-      const colPrim = colBorg + 8;
+      const row3 = sheet.getRow(3);
+      row3.height = 20;
+      row3.values = [
+        "№",
+        "ПІБ",
+        "Посада",
+        ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+        "Днів",
+        "Днів 2",
+        "Тариф1",
+        "Тариф 2",
+        "Додано",
+        "Утримано",
+        "Сума",
+        "Примітки",
+      ];
 
-      row.getCell(colBorg).value = user.debt || null;
-      row.getCell(colDniv).value = workedDaysCount;
-      row.getCell(colDniv2).value = null;
-      row.getCell(colTarif1).value = user.tariff || 0;
-      row.getCell(colTarif2).value = null;
-      row.getCell(colDodano).value = user.bonuses || null;
-      row.getCell(colUtrimano).value = user.penalties || null;
-
-      const dnivLetter = sheet
-        .getCell(rowIndex, colDniv)
-        .address.replace(/[0-9]/g, "");
-      const tarifLetter = sheet
-        .getCell(rowIndex, colTarif1)
-        .address.replace(/[0-9]/g, "");
-      const dodanoLetter = sheet
-        .getCell(rowIndex, colDodano)
-        .address.replace(/[0-9]/g, "");
-      const utrimanoLetter = sheet
-        .getCell(rowIndex, colUtrimano)
-        .address.replace(/[0-9]/g, "");
-
-      row.getCell(colSuma).value = {
-        formula: `=${dnivLetter}${rowIndex}*${tarifLetter}${rowIndex}+SUM(${dodanoLetter}${rowIndex})-SUM(${utrimanoLetter}${rowIndex})`,
-      };
-
-      row.getCell(colPrim).value = user.notes || "";
-
-      for (let c = 1; c <= startFinanceCol + 8; c++) {
-        const cell = row.getCell(c);
+      for (let col = 1; col <= startFinanceCol + 8; col++) {
+        const cell = sheet.getCell(3, col);
+        cell.font = { name: "Times New Roman", size: 9, bold: true };
+        cell.alignment = {
+          horizontal: "center",
+          vertical: "middle",
+          wrapText: true,
+        };
         cell.border = thinBorder;
-        cell.font = { name: "Times New Roman", size: 9 };
-        if (c !== 2 && c !== 3 && c !== colPrim) {
-          cell.alignment = { horizontal: "center", vertical: "middle" };
+
+        if (col >= 4 && col <= 3 + daysInMonth) {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFC000" },
+          };
+        } else if (col === startFinanceCol) {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFF2CC" },
+          };
+        } else if (col === startFinanceCol + 1 || col === startFinanceCol + 2) {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "DDEBF7" },
+          };
+        } else if (col === startFinanceCol + 5) {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "E2EFDA" },
+          };
+        } else if (col === startFinanceCol + 6) {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FCE4D6" },
+          };
         } else {
-          cell.alignment = { horizontal: "left", vertical: "middle" };
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "F2F2F2" },
+          };
         }
       }
-    });
+
+      // Загружаем только те визиты, которые относятся к этому объекту в отчетном месяце
+      const objectVisits = await Visit.find({
+        objectName: objectName,
+        dateString: { $gte: startDateStr, $lt: endDateStr },
+      });
+
+      // Загружаем объект вместе с его локациями
+      const object = await ConstructionObject.findOne({
+        name: objectName,
+      });
+
+      const locations = object?.locations || [];
+
+      // Вытаскиваем уникальные ID сотрудников, которые отметились на этом объекте хоть раз
+      const uniqueUserIds = [
+        ...new Set(
+          objectVisits.map((v) => (v.userId ? v.userId.toString() : null)),
+        ),
+      ].filter(Boolean);
+
+      // Загружаем из базы карточки ТОЛЬКО этих сотрудников (и сортируем по имени)
+      const users = await User.find({
+        _id: { $in: uniqueUserIds },
+        objectName: objectName,
+        location: location,
+      }).sort({
+        name: 1,
+      });
+
+      // Заполняем строки данными сотрудников
+      users.forEach((user, index) => {
+        const rowIndex = 4 + index;
+        const row = sheet.getRow(rowIndex);
+        row.height = 18;
+
+        row.getCell(1).value = index + 1;
+        row.getCell(2).value = user.name || "Без імені";
+        row.getCell(3).value = user.job || "Робітник";
+
+        let workedDaysCount = 0;
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const colIndex = 3 + day;
+          const currentDayStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+          const hasScan = objectVisits.some(
+            (visit) =>
+              visit.userId &&
+              visit.userId.toString() === user._id.toString() &&
+              visit.dateString === currentDayStr,
+          );
+
+          const dayCell = row.getCell(colIndex);
+          if (hasScan) {
+            dayCell.value = 8;
+            workedDaysCount++;
+          } else {
+            dayCell.value = "";
+          }
+
+          dayCell.alignment = { horizontal: "center", vertical: "middle" };
+          dayCell.font = { name: "Times New Roman", size: 9 };
+          dayCell.border = thinBorder;
+        }
+
+        const colBorg = 4 + daysInMonth;
+        const colDniv = colBorg + 1;
+        const colDniv2 = colBorg + 2;
+        const colTarif1 = colBorg + 3;
+        const colTarif2 = colBorg + 4;
+        const colDodano = colBorg + 5;
+        const colUtrimano = colBorg + 6;
+        const colSuma = colBorg + 7;
+        const colPrim = colBorg + 8;
+
+        row.getCell(colBorg).value = user.debt || null;
+        row.getCell(colDniv).value = workedDaysCount;
+        row.getCell(colDniv2).value = null;
+        row.getCell(colTarif1).value = user.tariff || 0;
+        row.getCell(colTarif2).value = null;
+        row.getCell(colDodano).value = user.bonuses || null;
+        row.getCell(colUtrimano).value = user.penalties || null;
+
+        const dnivLetter = sheet
+          .getCell(rowIndex, colDniv)
+          .address.replace(/[0-9]/g, "");
+        const tarifLetter = sheet
+          .getCell(rowIndex, colTarif1)
+          .address.replace(/[0-9]/g, "");
+        const dodanoLetter = sheet
+          .getCell(rowIndex, colDodano)
+          .address.replace(/[0-9]/g, "");
+        const utrimanoLetter = sheet
+          .getCell(rowIndex, colUtrimano)
+          .address.replace(/[0-9]/g, "");
+
+        row.getCell(colSuma).value = {
+          formula: `=${dnivLetter}${rowIndex}*${tarifLetter}${rowIndex}+SUM(${dodanoLetter}${rowIndex})-SUM(${utrimanoLetter}${rowIndex})`,
+        };
+
+        row.getCell(colPrim).value = user.notes || "";
+
+        for (let c = 1; c <= startFinanceCol + 8; c++) {
+          const cell = row.getCell(c);
+          cell.border = thinBorder;
+          cell.font = { name: "Times New Roman", size: 9 };
+          if (c !== 2 && c !== 3 && c !== colPrim) {
+            cell.alignment = { horizontal: "center", vertical: "middle" };
+          } else {
+            cell.alignment = { horizontal: "left", vertical: "middle" };
+          }
+        }
+      });
+    }
     // --- ОТПРАВКА ГОТОВОГО ФАЙЛА В БРАУЗЕР ---
     res.setHeader(
       "Content-Type",
