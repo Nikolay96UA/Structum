@@ -1,139 +1,424 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>STRUCTUM — Панель Адміністратора</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
-        body { background-color: #f4f6f9; padding: 30px; }
-        header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 30px; }
-        .logo h1 { font-size: 24px; letter-spacing: 2px; color: #333; }
-        .logo p { font-size: 12px; color: #777; text-transform: uppercase; }
-        
-        .container { max-width: 1200px; margin: 0 auto; }
-        .title { font-size: 20px; color: #444; margin-bottom: 20px; font-weight: bold; }
-        
-        /* Сетка для карточек объектов */
-        .objects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .object-card { background: white; border-radius: 8px; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 5px solid #28a745; display: flex; flex-direction: column; justify-content: space-between; }
-        .object-name { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 15px; }
-        
-        .btn-download { display: block; text-align: center; background-color: #28a745; color: white; padding: 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 14px; transition: background 0.2s; }
-        .btn-download:hover { background-color: #218838; }
-        #loading { font-size: 16px; color: #666; }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Arial", sans-serif;
+      }
+      body {
+        background-color: #f4f6f9;
+        padding: 30px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        padding: 20px 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+      }
+      .logo h1 {
+        font-size: 24px;
+        letter-spacing: 2px;
+        color: #333;
+      }
+      .logo p {
+        font-size: 12px;
+        color: #777;
+        text-transform: uppercase;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .title {
+        font-size: 20px;
+        color: #444;
+        margin-bottom: 20px;
+        font-weight: bold;
+      }
+
+      /* Сетка для карточек объектов */
+      .objects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+      }
+      .object-card {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        border-top: 5px solid #28a745;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .object-name {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 15px;
+      }
+
+      .btn-download {
+        display: block;
+        text-align: center;
+        background-color: #28a745;
+        color: white;
+        padding: 12px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 14px;
+        transition: background 0.2s;
+      }
+      .btn-download:hover {
+        background-color: #218838;
+      }
+      #loading {
+        font-size: 16px;
+        color: #666;
+      }
     </style>
-</head>
-<body>
-
-<div class="container">
-    <header>
+  </head>
+  <body>
+    <div class="container">
+      <header>
         <div class="logo">
-            <a href="./index.html"><h1>STRUCTUM</h1>
-            <p>облік персоналу • Адмін-панель</p></a>
-            
+          <a href="./index.html"
+            ><h1>STRUCTUM</h1>
+            <p>облік персоналу • Адмін-панель</p></a
+          >
         </div>
-        <a href="login.html" style="color: #dc3545; font-weight: bold; text-decoration: none;">Вийти</a>
-    </header>
+        <a
+          href="login.html"
+          style="color: #dc3545; font-weight: bold; text-decoration: none"
+          >Вийти</a
+        >
+      </header>
 
-    <div class="title">📋 Доступні табелі будівельних об'єктів</div>
-    
-    <div id="loading">Завантаження списку об'єктів...</div>
-    <div class="objects-grid" id="objectsGrid"></div>
-</div>
+      <div class="title">📋 Доступні табелі будівельних об'єктів</div>
 
-<script>
-    async function loadObjects() {
-        const grid = document.getElementById('objectsGrid');
-        const loadingText = document.getElementById('loading');
-        
+      <div id="loading">Завантаження списку об'єктів...</div>
+      <div class="objects-grid" id="objectsGrid"></div>
+    </div>
+
+    <script>
+      async function loadObjects() {
+        const grid = document.getElementById("objectsGrid");
+        const loadingText = document.getElementById("loading");
+
         try {
-            // Замените на 'https://onrender.com' при деплое на Render
-            const response = await fetch('https://structum.onrender.com/api/objects');
-            const data = await response.json();
-            
-            loadingText.style.display = 'none';
-            grid.innerHTML = '';
-            
-            if(data.success && data.objects.length > 0) {
-                data.objects.forEach(objectName => {
-                    // Создаем динамическую карточку для каждого строительного объекта
-                    const card = document.createElement('div');
-                    card.className = 'object-card';
-                    
-                    // Формируем правильную ссылку на скачивание с query-параметром имени объекта
-                    // Для Render замените на: https://onrender.com...
-                    const downloadUrl = `https://structum.onrender.com/api/attendance/download-excel?objectName=${encodeURIComponent(objectName)}`;
-                    
-                    card.innerHTML = `
+          // Замените на 'https://onrender.com' при деплое на Render
+          const response = await fetch(
+            "https://structum.onrender.com/api/objects",
+          );
+          const data = await response.json();
+
+          loadingText.style.display = "none";
+          grid.innerHTML = "";
+
+          if (data.success && data.objects.length > 0) {
+            data.objects.forEach((objectName) => {
+              // Создаем динамическую карточку для каждого строительного объекта
+              const card = document.createElement("div");
+              card.className = "object-card";
+
+              // Формируем правильную ссылку на скачивание с query-параметром имени объекта
+              // Для Render замените на: https://onrender.com...
+              const downloadUrl = `https://structum.onrender.com/api/attendance/download-excel?objectName=${encodeURIComponent(objectName)}`;
+
+              card.innerHTML = `
     <div class="object-name">🏗️ ${objectName}</div>
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <a href="${downloadUrl}" class="btn-download" style="flex: 1;">📊 Табель Excel</a>
-        <button onclick="deleteObject('${objectName}')" style="background-color: #dc3545; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer;">❌ Видалити</button>
+
+    <div style="display:flex;gap:10px;margin-top:10px;">
+        <a href="${downloadUrl}" class="btn-download" style="flex:1;">
+            📊 Табель Excel
+        </a>
+
+        <button
+            onclick="deleteObject('${objectName}')"
+            style="
+                background:#dc3545;
+                color:white;
+                border:none;
+                padding:10px;
+                border-radius:4px;
+                font-weight:bold;
+                cursor:pointer;
+            ">
+            ❌ Видалити
+        </button>
+    </div>
+
+    <hr style="margin:20px 0;">
+
+    <h4 style="margin-bottom:10px;">
+        📍 Локації
+    </h4>
+
+    <div
+        id="locations-${objectName}"
+        style="margin-bottom:15px;">
+        Завантаження...
+    </div>
+
+    <div style="display:flex;gap:10px;">
+        <input
+            id="new-location-${objectName}"
+            placeholder="Нова локація"
+            style="flex:1;padding:8px;">
+
+        <button
+            onclick="addLocation('${objectName}')"
+            style="
+                background:#28a745;
+                color:white;
+                border:none;
+                padding:8px 14px;
+                border-radius:4px;
+                cursor:pointer;">
+            ➕
+        </button>
     </div>
 `;
 
-                    grid.appendChild(card);
-                });
-            } else {
-                grid.innerHTML = '<p style="color: #999;">Наразі немає створених об\'єктів або активних табелів.</p>';
-            }
+              grid.appendChild(card);
+              loadLocations(objectName);
+            });
+          } else {
+            grid.innerHTML =
+              '<p style="color: #999;">Наразі немає створених об\'єктів або активних табелів.</p>';
+          }
         } catch (error) {
-            console.error(error);
-            loadingText.textContent = 'Помилка завантаження даних із сервера бэкенда.';
+          console.error(error);
+          loadingText.textContent =
+            "Помилка завантаження даних із сервера бэкенда.";
         }
-    }
+      }
 
-async function deleteObject(name) {
-    // Получаем логин текущего пользователя из памяти браузера
-    const currentLogin = localStorage.getItem('userLogin');
+      async function deleteObject(name) {
+        // Получаем логин текущего пользователя из памяти браузера
+        const currentLogin = localStorage.getItem("userLogin");
 
-    if (!currentLogin) {
-        alert("Помилка: Ви не авторизовані! Будь ласка, увійдіть в систему знову.");
-        window.location.href = 'login.html';
-        return;
-    }
+        if (!currentLogin) {
+          alert(
+            "Помилка: Ви не авторизовані! Будь ласка, увійдіть в систему знову.",
+          );
+          window.location.href = "login.html";
+          return;
+        }
 
-    // Запрашиваем ввод пароля от текущего аккаунта
-    const passwordInput = prompt(`Увага! Ви збираєтеся видалити об'єкт "${name}". Для підтвердження введіть пароль від вашого акаунту (${currentLogin}):`);
-    
-    if (passwordInput === null) return; // Если нажали "Отмена"
-    if (passwordInput.trim() === "") {
-        alert("Дія скасована. Пароль не може бути порожнім.");
-        return;
-    }
+        // Запрашиваем ввод пароля от текущего аккаунта
+        const passwordInput = prompt(
+          `Увага! Ви збираєтеся видалити об'єкт "${name}". Для підтвердження введіть пароль від вашого акаунту (${currentLogin}):`,
+        );
 
-    try {
-        // Укажи адрес 'http://localhost:3000/api/objects' для локального теста
-        const response = await fetch('https://structum.onrender.com/api/objects', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+        if (passwordInput === null) return; // Если нажали "Отмена"
+        if (passwordInput.trim() === "") {
+          alert("Дія скасована. Пароль не може бути порожнім.");
+          return;
+        }
+
+        try {
+          // Укажи адрес 'http://localhost:3000/api/objects' для локального теста
+          const response = await fetch(
+            "https://structum.onrender.com/api/objects",
+            {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
                 objectName: name,
-                login: currentLogin,             
-                password: passwordInput.trim()   
-            })
-        });
+                login: currentLogin,
+                password: passwordInput.trim(),
+              }),
+            },
+          );
 
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
+          const data = await response.json();
+
+          if (response.ok && data.success) {
             alert(data.message);
             loadObjects(); // Перезагружаем сетку объектов на экране
-        } else {
+          } else {
             alert(`Помилка: ${data.message}`);
+          }
+        } catch (error) {
+          console.error(error);
+          alert("Помилка підключення до сервера бэкенда");
         }
-    } catch (error) {
-        console.error(error);
-        alert('Помилка підключення до сервера бэкенда');
+      }
+
+
+      async function loadLocations(objectName){
+
+    try{
+
+        const response=await fetch(
+            `https://structum.onrender.com/api/objects/${encodeURIComponent(objectName)}/locations`
+        );
+
+        const data=await response.json();
+
+        const container=document.getElementById(
+            `locations-${objectName}`
+        );
+
+        container.innerHTML='';
+
+        if(!data.locations.length){
+
+            container.innerHTML="<span style='color:#888;'>Локацій поки немає</span>";
+
+            return;
+
+        }
+
+        data.locations.forEach(location=>{
+
+            const row=document.createElement("div");
+
+            row.style.display="flex";
+            row.style.justifyContent="space-between";
+            row.style.marginBottom="6px";
+
+            row.innerHTML=`
+                <span>📍 ${location}</span>
+
+                <button
+                    onclick="deleteLocation('${objectName}','${location}')"
+                    style="
+                        background:#dc3545;
+                        color:white;
+                        border:none;
+                        border-radius:4px;
+                        cursor:pointer;
+                        padding:4px 10px;">
+                    ❌
+                </button>
+            `;
+
+            container.appendChild(row);
+
+        });
+
+    }catch(err){
+
+        console.error(err);
+
     }
+
 }
 
 
+async function addLocation(objectName){
 
-    // Запускаем загрузку при открытии страницы
-    loadObjects();
-</script>
+    const input=document.getElementById(
+        `new-location-${objectName}`
+    );
 
-</body>
+    const value=input.value.trim();
+
+    if(!value){
+
+        alert("Введіть назву локації");
+
+        return;
+
+    }
+
+    const response=await fetch(
+
+        `https://structum.onrender.com/api/objects/${encodeURIComponent(objectName)}/locations`,
+
+        {
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+
+                location:value
+
+            })
+
+        }
+
+    );
+
+    const result=await response.json();
+
+    if(result.success){
+
+        input.value="";
+
+        loadLocations(objectName);
+
+    }else{
+
+        alert(result.message);
+
+    }
+
+}
+
+
+async function deleteLocation(objectName,location){
+
+    if(!confirm(`Видалити "${location}" ?`))
+        return;
+
+    const response=await fetch(
+
+        `https://structum.onrender.com/api/objects/${encodeURIComponent(objectName)}/locations`,
+
+        {
+
+            method:"DELETE",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+
+                location
+
+            })
+
+        }
+
+    );
+
+    const result=await response.json();
+
+    if(result.success){
+
+        loadLocations(objectName);
+
+    }else{
+
+        alert(result.message);
+
+    }
+
+}
+
+      // Запускаем загрузку при открытии страницы
+      loadObjects();
+    </script>
+  </body>
 </html>
