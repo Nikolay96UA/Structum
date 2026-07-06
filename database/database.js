@@ -26,7 +26,6 @@ const upload = multer({ storage: storage });
 // --- ПОДКЛЮЧЕНИЕ К MONGODB ---
 const MONGO_URI = process.env.MONGO_URI;
 
-
 mongoose
   .connect(MONGO_URI)
   .then(() => console.log("🍃 Успешно подключено к MongoDB Atlas!"))
@@ -57,8 +56,7 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model("User", userSchema);
 
 // --- МАРШРУТЫ API ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ---
-
-// 1. Получить всех пользователей из базы
+const MONGO_URI = process.env.MONGO_URI;
 
 app.get("/api/users", async (req, res) => {
   try {
