@@ -20,15 +20,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Настройка multer для чтения файлов прямо из памяти (без сохранения на жесткий диск)
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // --- ПОДКЛЮЧЕНИЕ К MONGODB ---
 const MONGO_URI = process.env.MONGO_URI;
 
-// const MONGO_URI =
-//   "mongodb+srv://themaxplayn_db_user:F2M3UMzn9UGuRypp@cluster0.xf3circ.mongodb.net/myDatabase?appName=Cluster0";
 
 mongoose
   .connect(MONGO_URI)
