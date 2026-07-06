@@ -421,9 +421,9 @@ app.get("/api/attendance/download-excel", async (req, res) => {
       // Шапка таблицы
       sheet.mergeCells(`D1:${sheet.getCell(1, 3 + daysInMonth).address}`);
       const monthCell = sheet.getCell("D1");
-      monthCell.value = `Табель: ${objectName}
-Локація: ${location}
-Місяць ${month}.${year}`;
+      monthCell.value = `Табель: ${objectName } 
+Локація: ${location } 
+Місяць ${month }.${year } `;
       monthCell.font = {
         name: "Times New Roman",
         size: 10,
