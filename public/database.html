@@ -383,16 +383,16 @@
             </select>
           </div>
           <div style="margin-top: 15px">
-          <strong>Тариф (грн/день)</strong>
+            <strong>Тариф (грн/день)</strong>
 
-          <input
-            type="number"
-            id="workerTariff"
-            min="0"
-            step="1"
-            style="width: 100%; padding: 10px; margin-top: 8px"
-          />
-        </div>
+            <input
+              type="number"
+              id="workerTariff"
+              min="0"
+              step="1"
+              style="width: 100%; padding: 10px; margin-top: 8px"
+            />
+          </div>
 
           <button
             id="saveLocationBtn"
@@ -409,8 +409,6 @@
             💾 Зберегти дані
           </button>
         </div>
-
-        
 
         <!-- Кнопки действий -->
         <div style="display: flex; flex-direction: column; gap: 10px">
@@ -454,6 +452,20 @@
           >
             📊 Скачати табель цього об'єкта
           </a>
+          <button
+            id="deleteWorkerBtn"
+            class="btn-delete"
+            style="
+              background: #dc3545;
+              color: white;
+              padding: 10px 18px;
+              border: none;
+              border-radius: 6px;
+              cursor: pointer;
+            "
+          >
+            ❌ Звільнений
+          </button>
         </div>
       </div>
     </div>
@@ -580,17 +592,6 @@
           actionsDiv.appendChild(cardBtn);
 
           // Кнопка удаления (увольнения)
-          const deleteBtn = document.createElement("button");
-          deleteBtn.textContent = "Звільнений";
-          deleteBtn.className = "btn-delete";
-          deleteBtn.style.padding = "6px 12px";
-          deleteBtn.style.borderRadius = "4px";
-          deleteBtn.addEventListener("click", async () => {
-            if (confirm(`Ви впевнені, що хочете видалити ${user.name}?`)) {
-              await deleteUser(user._id);
-            }
-          });
-          actionsDiv.appendChild(deleteBtn);
 
           li.appendChild(actionsDiv);
           list.appendChild(li);
@@ -813,6 +814,16 @@
               }),
             },
           );
+
+          document.getElementById("deleteWorkerBtn").onclick = async () => {
+            if (!confirm(`Ви впевнені, що хочете звільнити "${user.name}"?`)) {
+              return;
+            }
+
+            await deleteUser(user._id);
+
+            document.getElementById("workerModal").style.display = "none";
+          };
 
           const result = await response.json();
 
