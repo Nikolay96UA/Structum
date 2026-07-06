@@ -787,6 +787,16 @@
           }
         });
 
+        document.getElementById("deleteWorkerBtn").onclick = async () => {
+            if (!confirm(`Ви впевнені, що хочете звільнити "${user.name}"?`)) {
+              return;
+            }
+
+            await deleteUser(user._id);
+
+            document.getElementById("workerModal").style.display = "none";
+          };
+
         document.getElementById("saveLocationBtn").onclick = async () => {
           if (!user.objectName) {
             alert("Працівник не має об'єкта.");
@@ -815,15 +825,7 @@
             },
           );
 
-          document.getElementById("deleteWorkerBtn").onclick = async () => {
-            if (!confirm(`Ви впевнені, що хочете звільнити "${user.name}"?`)) {
-              return;
-            }
-
-            await deleteUser(user._id);
-
-            document.getElementById("workerModal").style.display = "none";
-          };
+          
 
           const result = await response.json();
 
