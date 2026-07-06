@@ -56,7 +56,6 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model("User", userSchema);
 
 // --- МАРШРУТЫ API ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ ---
-const MONGO_URI = process.env.MONGO_URI;
 
 app.get("/api/users", async (req, res) => {
   try {
