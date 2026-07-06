@@ -354,7 +354,6 @@
           <hr />
 
           <div>
-           
             <div>
               <strong>Будівельний об'єкт</strong>
 
@@ -398,6 +397,18 @@
           >
             💾 Зберегти локацію
           </button>
+        </div>
+
+        <div style="margin-top: 15px">
+          <strong>Тариф (грн/день)</strong>
+
+          <input
+            type="number"
+            id="workerTariff"
+            min="0"
+            step="1"
+            style="width: 100%; padding: 10px; margin-top: 8px"
+          />
         </div>
 
         <!-- Кнопки действий -->
@@ -595,6 +606,7 @@
           user.job || "Не вказано";
         document.getElementById("modalLocation").textContent =
           user.lastLocation || "Немає відміток";
+        document.getElementById("workerTariff").value = user.tariff || 0;
         document.getElementById("modalPhone").textContent =
           user.phone || "Немає даних";
         document.getElementById("modalEmail").textContent =
@@ -776,9 +788,10 @@
         document.getElementById("saveLocationBtn").onclick = async () => {
           if (!user.objectName) {
             alert("Працівник не має об'єкта.");
-
             return;
           }
+
+          const tariff = Number(document.getElementById("workerTariff").value);
 
           const location = locationSelect.value;
 
@@ -795,6 +808,7 @@
               body: JSON.stringify({
                 objectName: objectSelect.value,
                 location: locationSelect.value,
+                tariff,
               }),
             },
           );
@@ -803,8 +817,10 @@
 
           if (result.success) {
             user.location = location;
+            user.objectName = objectSelect.value;
+            user.tariff = tariff;
 
-            alert("Локацію збережено");
+            alert("Дані успішно збережено");
             loadUsers();
           } else {
             alert(result.message);

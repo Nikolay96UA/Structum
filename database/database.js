@@ -245,7 +245,7 @@ app.delete("/api/users/:id", async (req, res) => {
 // ==========================================
 app.put("/api/users/:id/location", async (req, res) => {
   try {
-    const { objectName, location } = req.body;
+    const { objectName, location, tariff } = req.body;
 
     const user = await User.findById(req.params.id);
 
@@ -259,6 +259,9 @@ app.put("/api/users/:id/location", async (req, res) => {
 
     user.objectName = objectName;
     user.location = location;
+    if (tariff !== undefined) {
+      user.tariff = tariff;
+    }
 
     await user.save();
 
@@ -421,9 +424,9 @@ app.get("/api/attendance/download-excel", async (req, res) => {
       // Шапка таблицы
       sheet.mergeCells(`D1:${sheet.getCell(1, 3 + daysInMonth).address}`);
       const monthCell = sheet.getCell("D1");
-      monthCell.value = `Табель: ${objectName } 
-Локація: ${location } 
-Місяць ${month }.${year } `;
+      monthCell.value = `Табель: ${objectName} 
+Локація: ${location} 
+Місяць ${month}.${year} `;
       monthCell.font = {
         name: "Times New Roman",
         size: 10,
@@ -548,204 +551,190 @@ app.get("/api/attendance/download-excel", async (req, res) => {
       });
 
       const groups = [
-  {
-    title: "Загальнобудівельні роботи",
-    jobs: [
-      "монтажник",
-      "зварник",
-      "бригадир",
-      "стропальник",
-      "підсобник",
-    ],
-  },
+        {
+          title: "Загальнобудівельні роботи",
+          jobs: [
+            "монтажник",
+            "зварник",
+            "бригадир",
+            "стропальник",
+            "підсобник",
+          ],
+        },
 
-  {
-    title: "Транспортний відділ",
-    jobs: [
-      "водій",
-      "водій автокрана",
-    ],
-  },
+        {
+          title: "Транспортний відділ",
+          jobs: ["водій", "водій автокрана"],
+        },
 
-  {
-    title: "ІТП",
-    jobs: [
-      "інженер",
-      "виконроб",
-      "комірник",
-      "начальник бази",
-      "геодезист",
-      "інженер ОП",
-      "механік",
-      "начальник дільниці",
-    ],
-  },
-];
+        {
+          title: "ІТП",
+          jobs: [
+            "інженер",
+            "виконроб",
+            "комірник",
+            "начальник бази",
+            "геодезист",
+            "інженер ОП",
+            "механік",
+            "начальник дільниці",
+          ],
+        },
+      ];
 
       // Заполняем строки данными сотрудников
-     let currentRow = 4;
+      let currentRow = 4;
 
-for (const group of groups) {
+      for (const group of groups) {
+        const workers = users.filter((user) => {
+          const job = (user.job || "").trim().toLowerCase();
 
-  const workers = users.filter(user => {
-    const job = (user.job || "").trim().toLowerCase();
+          return group.jobs.some((j) => job === j.toLowerCase());
+        });
 
-    return group.jobs.some(j =>
-      job === j.toLowerCase()
-    );
-  });
+        if (workers.length === 0) continue;
 
-  if (workers.length === 0) continue;
+        // Заголовок групи
+        sheet.mergeCells(
+          `A${currentRow}:${sheet.getCell(currentRow, startFinanceCol + 8).address}`,
+        );
 
-  // Заголовок групи
-  sheet.mergeCells(
-    `A${currentRow}:${sheet.getCell(currentRow, startFinanceCol + 8).address}`
-  );
+        const headerCell = sheet.getCell(`A${currentRow}`);
 
-  const headerCell = sheet.getCell(`A${currentRow}`);
+        headerCell.value = group.title;
 
-  headerCell.value = group.title;
+        headerCell.font = {
+          name: "Times New Roman",
+          size: 10,
+          bold: true,
+        };
 
-  headerCell.font = {
-    name: "Times New Roman",
-    size: 10,
-    bold: true,
-  };
-
-  headerCell.alignment = {
-    horizontal: "center",
-    vertical: "middle",
-  };
-
-  headerCell.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "E2EFDA" },
-  };
-
-  currentRow++;
-
-  workers.forEach((user, index) => {
-
-    const rowIndex = currentRow;
-
-    const row = sheet.getRow(rowIndex);
-
-    row.height = 18;
-
-    row.getCell(1).value = index + 1;
-    row.getCell(2).value = user.name || "Без імені";
-    row.getCell(3).value = user.job || "Робітник";
-
-    let workedDaysCount = 0;
-
-    for (let day = 1; day <= daysInMonth; day++) {
-
-      const colIndex = 3 + day;
-
-      const currentDayStr =
-        `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-
-      const hasScan = objectVisits.some(
-        visit =>
-          visit.userId &&
-          visit.userId.toString() === user._id.toString() &&
-          visit.dateString === currentDayStr
-      );
-
-      const dayCell = row.getCell(colIndex);
-
-      if (hasScan) {
-        dayCell.value = 8;
-        workedDaysCount++;
-      } else {
-        dayCell.value = "";
-      }
-
-      dayCell.alignment = {
-        horizontal: "center",
-        vertical: "middle",
-      };
-
-      dayCell.font = {
-        name: "Times New Roman",
-        size: 9,
-      };
-
-      dayCell.border = thinBorder;
-    }
-
-    const colBorg = 4 + daysInMonth;
-    const colDniv = colBorg + 1;
-    const colDniv2 = colBorg + 2;
-    const colTarif1 = colBorg + 3;
-    const colTarif2 = colBorg + 4;
-    const colDodano = colBorg + 5;
-    const colUtrimano = colBorg + 6;
-    const colSuma = colBorg + 7;
-    const colPrim = colBorg + 8;
-
-    row.getCell(colBorg).value = user.debt || null;
-    row.getCell(colDniv).value = workedDaysCount;
-    row.getCell(colDniv2).value = null;
-    row.getCell(colTarif1).value = user.tariff || 0;
-    row.getCell(colTarif2).value = null;
-    row.getCell(colDodano).value = user.bonuses || null;
-    row.getCell(colUtrimano).value = user.penalties || null;
-
-    const dnivLetter = sheet
-      .getCell(rowIndex, colDniv)
-      .address.replace(/[0-9]/g, "");
-
-    const tarifLetter = sheet
-      .getCell(rowIndex, colTarif1)
-      .address.replace(/[0-9]/g, "");
-
-    const dodanoLetter = sheet
-      .getCell(rowIndex, colDodano)
-      .address.replace(/[0-9]/g, "");
-
-    const utrimanoLetter = sheet
-      .getCell(rowIndex, colUtrimano)
-      .address.replace(/[0-9]/g, "");
-
-    row.getCell(colSuma).value = {
-      formula:
-        `=${dnivLetter}${rowIndex}*${tarifLetter}${rowIndex}+SUM(${dodanoLetter}${rowIndex})-SUM(${utrimanoLetter}${rowIndex})`,
-    };
-
-    row.getCell(colPrim).value = user.notes || "";
-
-    for (let c = 1; c <= startFinanceCol + 8; c++) {
-
-      const cell = row.getCell(c);
-
-      cell.border = thinBorder;
-
-      cell.font = {
-        name: "Times New Roman",
-        size: 9,
-      };
-
-      if (c !== 2 && c !== 3 && c !== colPrim) {
-        cell.alignment = {
+        headerCell.alignment = {
           horizontal: "center",
           vertical: "middle",
         };
-      } else {
-        cell.alignment = {
-          horizontal: "left",
-          vertical: "middle",
+
+        headerCell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "E2EFDA" },
         };
+
+        currentRow++;
+
+        workers.forEach((user, index) => {
+          const rowIndex = currentRow;
+
+          const row = sheet.getRow(rowIndex);
+
+          row.height = 18;
+
+          row.getCell(1).value = index + 1;
+          row.getCell(2).value = user.name || "Без імені";
+          row.getCell(3).value = user.job || "Робітник";
+
+          let workedDaysCount = 0;
+
+          for (let day = 1; day <= daysInMonth; day++) {
+            const colIndex = 3 + day;
+
+            const currentDayStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+            const hasScan = objectVisits.some(
+              (visit) =>
+                visit.userId &&
+                visit.userId.toString() === user._id.toString() &&
+                visit.dateString === currentDayStr,
+            );
+
+            const dayCell = row.getCell(colIndex);
+
+            if (hasScan) {
+              dayCell.value = 8;
+              workedDaysCount++;
+            } else {
+              dayCell.value = "";
+            }
+
+            dayCell.alignment = {
+              horizontal: "center",
+              vertical: "middle",
+            };
+
+            dayCell.font = {
+              name: "Times New Roman",
+              size: 9,
+            };
+
+            dayCell.border = thinBorder;
+          }
+
+          const colBorg = 4 + daysInMonth;
+          const colDniv = colBorg + 1;
+          const colDniv2 = colBorg + 2;
+          const colTarif1 = colBorg + 3;
+          const colTarif2 = colBorg + 4;
+          const colDodano = colBorg + 5;
+          const colUtrimano = colBorg + 6;
+          const colSuma = colBorg + 7;
+          const colPrim = colBorg + 8;
+
+          row.getCell(colBorg).value = user.debt || null;
+          row.getCell(colDniv).value = workedDaysCount;
+          row.getCell(colDniv2).value = null;
+          row.getCell(colTarif1).value = user.tariff || 0;
+          row.getCell(colTarif2).value = null;
+          row.getCell(colDodano).value = user.bonuses || null;
+          row.getCell(colUtrimano).value = user.penalties || null;
+
+          const dnivLetter = sheet
+            .getCell(rowIndex, colDniv)
+            .address.replace(/[0-9]/g, "");
+
+          const tarifLetter = sheet
+            .getCell(rowIndex, colTarif1)
+            .address.replace(/[0-9]/g, "");
+
+          const dodanoLetter = sheet
+            .getCell(rowIndex, colDodano)
+            .address.replace(/[0-9]/g, "");
+
+          const utrimanoLetter = sheet
+            .getCell(rowIndex, colUtrimano)
+            .address.replace(/[0-9]/g, "");
+
+          row.getCell(colSuma).value = {
+            formula: `=${dnivLetter}${rowIndex}*${tarifLetter}${rowIndex}+SUM(${dodanoLetter}${rowIndex})-SUM(${utrimanoLetter}${rowIndex})`,
+          };
+
+          row.getCell(colPrim).value = user.notes || "";
+
+          for (let c = 1; c <= startFinanceCol + 8; c++) {
+            const cell = row.getCell(c);
+
+            cell.border = thinBorder;
+
+            cell.font = {
+              name: "Times New Roman",
+              size: 9,
+            };
+
+            if (c !== 2 && c !== 3 && c !== colPrim) {
+              cell.alignment = {
+                horizontal: "center",
+                vertical: "middle",
+              };
+            } else {
+              cell.alignment = {
+                horizontal: "left",
+                vertical: "middle",
+              };
+            }
+          }
+
+          currentRow++;
+        });
       }
-
-    }
-
-    currentRow++;
-
-  });
-
-}
     }
     // --- ОТПРАВКА ГОТОВОГО ФАЙЛА В БРАУЗЕР ---
     res.setHeader(
