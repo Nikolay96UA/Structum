@@ -6,86 +6,7 @@
     <title>STRUCTUM — База даних</title>
     <script src="https://cloudflare.com"></script>
 
-    <style>
-      body {
-        font-family: sans-serif;
-        margin: 40px;
-        background-color: #f4f6f9;
-        color: #333;
-      }
-      header {
-        margin-bottom: 30px;
-      }
-      header a {
-        text-decoration: none;
-        font-weight: bold;
-        color: #28a745;
-        font-size: 18px;
-        letter-spacing: 1px;
-      }
-      form {
-        background: white;
-        padding: 20px;
-        border-radius: 6px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        max-width: 400px;
-      }
-      input,
-      select {
-        width: 100%;
-        box-sizing: border-box;
-        margin: 8px 0;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 15px;
-        background-color: white;
-      }
-      input:focus,
-      select:focus {
-        border-color: #28a745;
-        outline: none;
-      }
-      button {
-        padding: 10px 15px;
-        cursor: pointer;
-        border-radius: 4px;
-        border: none;
-        font-weight: bold;
-        transition: background 0.2s;
-      }
-      button[type="submit"] {
-        background-color: #28a745;
-        color: white;
-        width: 100%;
-        margin-top: 10px;
-      }
-      button[type="submit"]:hover {
-        background-color: #218838;
-      }
-      .btn-delete {
-        background-color: #dc3545;
-        color: white;
-      }
-      .btn-delete:hover {
-        background-color: #bd2130;
-      }
-      ul {
-        list-style-type: none;
-        padding: 0;
-        max-width: 600px;
-      }
-      li {
-        background: white;
-        padding: 12px 15px;
-        margin-bottom: 8px;
-        border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-    </style>
+    <link rel="stylesheet" href="../css/database.css" />
   </head>
   <body>
     <header>
@@ -319,15 +240,18 @@
           🪪 Особова картка працівника
         </h3>
 
-        <div
-          style="
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            font-size: 16px;
-            margin-bottom: 25px;
-          "
-        >
+        <div class="worker-tabs">
+          <button class="tab-btn active" data-tab="mainTab">👤 Основне</button>
+
+          <button class="tab-btn" data-tab="workTab">📍 Робота</button>
+
+          <button class="tab-btn" data-tab="absenceTab">📅 Відсутність</button>
+
+          <button class="tab-btn" data-tab="docsTab">📄 Документи</button>
+
+          <button class="tab-btn" data-tab="actionsTab">⚙️ Дії</button>
+        </div>
+        <div id="mainTab" class="tab-content active">
           <div>
             <strong>ПІБ:</strong>
             <span id="modalName"></span>
@@ -339,11 +263,6 @@
           </div>
 
           <div>
-            <strong>Остання відмітка:</strong>
-            <span id="modalLocation"></span>
-          </div>
-
-          <div>
             <strong>Телефон:</strong>
             <span id="modalPhone"></span>
           </div>
@@ -352,79 +271,60 @@
             <strong>Email:</strong>
             <span id="modalEmail"></span>
           </div>
+        </div>
+
+        <div id="workTab" class="tab-content">
+          <div>
+            <strong>Остання відмітка:</strong>
+            <span id="modalLocation"></span>
+          </div>
 
           <hr />
 
-          <div>
-            <div>
-              <strong>Будівельний об'єкт</strong>
+          <strong>Будівельний об'єкт</strong>
 
-              <select
-                id="workerObjectSelect"
-                style="
-                  width: 100%;
-                  margin-top: 8px;
-                  padding: 10px;
-                  border: 1px solid #ccc;
-                  border-radius: 4px;
-                "
-              >
-                <option>Завантаження...</option>
-              </select>
-            </div>
-          </div>
+          <select
+            id="workerObjectSelect"
+            style="width: 100%; padding: 10px; margin-top: 8px"
+          ></select>
 
-          <div>
-            <strong>Робоча локація</strong>
+          <br /><br />
 
-            <select
-              id="workerLocationSelect"
-              style="margin-top: 8px; width: 100%; padding: 10px"
-            >
-              <option>Завантаження...</option>
-            </select>
-          </div>
-          <div style="margin-top: 15px">
-            <strong>Тариф (грн/день)</strong>
+          <strong>Робоча локація</strong>
 
-            <input
-              type="number"
-              id="workerTariff"
-              min="0"
-              step="1"
-              style="width: 100%; padding: 10px; margin-top: 8px"
-            />
-          </div>
+          <select
+            id="workerLocationSelect"
+            style="width: 100%; padding: 10px; margin-top: 8px"
+          ></select>
 
-          <button
-            id="saveLocationBtn"
-            style="
-              background: #28a745;
-              color: white;
-              padding: 10px;
-              border: none;
-              border-radius: 4px;
-              cursor: pointer;
-              font-weight: bold;
-            "
-          >
-            💾 Зберегти дані
+          <br /><br />
+
+          <strong>Тариф</strong>
+
+          <input
+            type="number"
+            id="workerTariff"
+            style="width: 100%; padding: 10px; margin-top: 8px"
+          />
+
+          <br /><br />
+
+          <button id="saveLocationBtn" style="width: 100%; padding: 10px">
+            💾 Зберегти
           </button>
+        </div>
 
-          <hr />
-
+        <div id="absenceTab" class="tab-content">
           <h4>Статус відсутності</h4>
 
-          <label>Тип</label>
-          <select
-            id="statusType"
-            style="width: 100%; padding: 10px; margin-top: 6px"
-          >
+          <select id="statusType" style="width: 100%; padding: 10px">
             <option value="weekend">Вихідний</option>
             <option value="sick">Хворий</option>
           </select>
 
-          <label style="margin-top: 10px; display: block"> Дата з </label>
+          <br /><br />
+
+          <label>Дата з</label>
 
           <input
             type="date"
@@ -432,7 +332,9 @@
             style="width: 100%; padding: 10px"
           />
 
-          <label style="margin-top: 10px; display: block"> Дата по </label>
+          <br /><br />
+
+          <label>Дата по</label>
 
           <input
             type="date"
@@ -440,87 +342,55 @@
             style="width: 100%; padding: 10px"
           />
 
+          <br /><br />
+
           <button
             id="addStatusBtn"
             style="
-              margin-top: 15px;
               width: 100%;
               padding: 10px;
               background: #17a2b8;
               color: white;
-              border: none;
-              border-radius: 5px;
-              cursor: pointer;
             "
           >
-            ➕ Додати статус
+            ➕ Додати
           </button>
 
           <div
             id="statusList"
-            style="
-              margin-top: 15px;
-              max-height: 180px;
-              overflow: auto;
-              border: 1px solid #ddd;
-              padding: 10px;
-              border-radius: 5px;
-            "
+            style="margin-top: 15px; max-height: 180px; overflow: auto"
           ></div>
         </div>
 
-        <!-- Кнопки действий -->
-        <div style="display: flex; flex-direction: row; gap: 10px">
-          <!-- Ссылка-кнопка для генерации QR кода (перенаправляет на твой генератор с ID) -->
-          <button
-            id="modalQrBtn"
-            href="#"
-            class="btn-action"
-            style="
-              display: block;
-              text-align: center;
-              background: #007bff;
-              color: white;
-              padding: 12px;
-              border-radius: 4px;
-              text-decoration: none;
-              font-weight: bold;
-            "
-          >
-            📱 Згенерувати QR-код перепустки
+        <div id="docsTab" class="tab-content">
+          <button id="modalQrBtn" class="btn-action">
+            📱 Згенерувати QR-код
           </button>
 
-          <!-- Скрытый невидимый блок, где скрипт будет тайно создавать картинку QR-кода для скачивания -->
-          <div id="hiddenQrContainer" style="display: none"></div>
+          <br /><br />
 
-          <!-- Кнопка скачивания табеля объекта, на котором он находится -->
-          <a
-            id="modalExcelBtn"
-            href="#"
-            class="btn-action"
-            style="
-              display: block;
-              text-align: center;
-              background: #28a745;
-              color: white;
-              padding: 12px;
-              border-radius: 4px;
-              text-decoration: none;
-              font-weight: bold;
-            "
-          >
-            📊 Скачати табель цього об'єкта
-          </a>
+          <a id="modalExcelBtn" class="btn-action"> 📊 Табель </a>
+        </div>
+
+        <!-- Кнопки действий -->
+        <div id="docsTab" class="tab-content">
+          <button id="modalQrBtn" class="btn-action">
+            📱 Згенерувати QR-код
+          </button>
+
+          <br /><br />
+
+          <a id="modalExcelBtn" class="btn-action"> 📊 Табель </a>
+        </div>
+
+        <div id="actionsTab" class="tab-content">
           <button
             id="deleteWorkerBtn"
-            class="btn-delete"
             style="
               background: #dc3545;
               color: white;
-              padding: 10px 18px;
-              border: none;
-              border-radius: 6px;
-              cursor: pointer;
+              width: 100%;
+              padding: 12px;
             "
           >
             ❌ Звільнений
@@ -1019,6 +889,17 @@
 
         loadStatuses();
 
+        // Открывать первую вкладку
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((btn) => btn.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((tab) => tab.classList.remove("active"));
+
+        document.querySelector('[data-tab="mainTab"]').classList.add("active");
+        document.getElementById("mainTab").classList.add("active");
+
         document.getElementById("workerModal").style.display = "flex";
       }
 
@@ -1144,6 +1025,31 @@
           console.error(err);
         }
       }
+
+      // ================================
+      // Переключение вкладок карточки
+      // ================================
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const tabButtons = document.querySelectorAll(".tab-btn");
+        const tabContents = document.querySelectorAll(".tab-content");
+
+        tabButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            // убираем активные классы
+            tabButtons.forEach((btn) => btn.classList.remove("active"));
+            tabContents.forEach((tab) => tab.classList.remove("active"));
+
+            // активная кнопка
+            button.classList.add("active");
+
+            // показываем нужную вкладку
+            const tabId = button.dataset.tab;
+
+            document.getElementById(tabId).classList.add("active");
+          });
+        });
+      });
 
       loadObjectsForFilter();
       loadUsers();
