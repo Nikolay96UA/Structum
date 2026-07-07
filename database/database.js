@@ -308,6 +308,39 @@ const visitSchema = new mongoose.Schema({
 
 const Visit = mongoose.model("Visit", visitSchema); // ✅ Зарегистрировали модель посещений
 
+// ==========================================
+// СХЕМА СТАТУСІВ ПРАЦІВНИКІВ
+// ==========================================
+const workerStatusSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+
+  type: {
+    type: String,
+    enum: ["weekend", "sick"],
+    required: true,
+  },
+
+  startDate: {
+    type: String,
+    required: true,
+  },
+
+  endDate: {
+    type: String,
+    required: true,
+  },
+});
+
+const WorkerStatus = mongoose.model(
+  "WorkerStatus",
+  workerStatusSchema,
+);
+
+
 // --- МАРШРУТ ДЛЯ СКАНИРОВАНИЯ QR-КОДА С БЛОКИРОВКОЙ ДРУГИХ ОБЪЕКТОВ ---
 app.post("/api/attendance/scan", async (req, res) => {
   try {
