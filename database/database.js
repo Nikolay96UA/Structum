@@ -275,6 +275,53 @@ app.put("/api/users/:id/location", async (req, res) => {
   }
 });
 
+// ==========================================
+// ДОДАТИ СТАТУС ПРАЦІВНИКУ
+// ==========================================
+app.post("/api/users/:id/status", async (req, res) => {
+  try {
+    const { type, startDate, endDate } = req.body;
+
+    if (!type || !startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Заповніть всі поля",
+      });
+    }
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Працівника не знайдено",
+      });
+    }
+
+    const status = new WorkerStatus({
+      userId: user._id,
+      type,
+      startDate,
+      endDate,
+    });
+
+    await status.save();
+
+    res.json({
+      success: true,
+      message: "Статус успішно додано",
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Помилка сервера",
+    });
+  }
+});
+
 // --- МАРШРУТ API ДЛЯ ТАБЕЛЯ EXCEL ---
 
 // 4. Загрузка файла Excel, парсинг и отправка JSON обратно
