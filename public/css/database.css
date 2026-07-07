@@ -77,36 +77,61 @@ li {
   align-items: center;
 }
 
+/* ===================== Вкладки ===================== */
+
 .worker-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e5e5e5;
+    overflow-x: auto;
+}
+
+.worker-tabs::-webkit-scrollbar {
+    display: none;
 }
 
 .tab-btn {
-  padding: 10px 15px;
-  border: none;
-  background: #e9ecef;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s;
+    padding: 10px 18px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    transition: .2s;
+    white-space: nowrap;
 }
 
 .tab-btn:hover {
-  background: #d6d8db;
+    color: #28a745;
 }
 
 .tab-btn.active {
-  background: #28a745;
-  color: white;
+    color: #28a745;
+    border-bottom-color: #28a745;
 }
 
-.worker-tab {
-  display: none;
+.tab-content {
+    display: none;
+    animation: fade .2s ease;
 }
 
-.worker-tab.active {
-  display: block;
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fade {
+
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
 }
