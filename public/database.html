@@ -1030,26 +1030,29 @@
       // Переключение вкладок карточки
       // ================================
 
-      document.addEventListener("DOMContentLoaded", () => {
-        const tabButtons = document.querySelectorAll(".tab-btn");
-        const tabContents = document.querySelectorAll(".tab-content");
+     document.addEventListener("DOMContentLoaded", () => {
 
-        tabButtons.forEach((button) => {
-          button.addEventListener("click", () => {
-            // убираем активные классы
-            tabButtons.forEach((btn) => btn.classList.remove("active"));
-            tabContents.forEach((tab) => tab.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(button => {
 
-            // активная кнопка
+        button.onclick = () => {
+
+            document.querySelectorAll(".tab-btn")
+                .forEach(btn => btn.classList.remove("active"));
+
+            document.querySelectorAll(".tab-content")
+                .forEach(tab => tab.classList.remove("active"));
+
             button.classList.add("active");
 
-            // показываем нужную вкладку
-            const tabId = button.dataset.tab;
+            document
+                .getElementById(button.dataset.tab)
+                .classList.add("active");
 
-            document.getElementById(tabId).classList.add("active");
-          });
-        });
-      });
+        };
+
+    });
+
+});
 
       loadObjectsForFilter();
       loadUsers();
