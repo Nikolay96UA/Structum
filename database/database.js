@@ -322,6 +322,30 @@ app.post("/api/users/:id/status", async (req, res) => {
   }
 });
 
+// ==========================================
+// ОТРИМАТИ ВСІ СТАТУСИ ПРАЦІВНИКА
+// ==========================================
+app.get("/api/users/:id/status", async (req, res) => {
+  try {
+    const statuses = await WorkerStatus.find({
+      userId: req.params.id,
+    }).sort({ startDate: 1 });
+
+    res.json({
+      success: true,
+      statuses,
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Помилка сервера",
+    });
+  }
+});
+
 // --- МАРШРУТ API ДЛЯ ТАБЕЛЯ EXCEL ---
 
 // 4. Загрузка файла Excel, парсинг и отправка JSON обратно
