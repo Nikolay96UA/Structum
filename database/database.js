@@ -311,7 +311,33 @@ app.post("/api/users/:id/status", async (req, res) => {
       success: true,
       message: "Статус успішно додано",
     });
+  } catch (err) {
+    console.error(err);
 
+    res.status(500).json({
+      success: false,
+      message: "Помилка сервера",
+    });
+  }
+});
+
+// ==========================================
+// ВИДАЛИТИ СТАТУС
+// ==========================================
+app.delete("/api/status/:id", async (req, res) => {
+  try {
+    const status = await WorkerStatus.findByIdAndDelete(req.params.id);
+
+    if (!status) {
+      return res.status(404).json({
+        success: false,
+        message: "Статус не знайдено",
+      });
+    }
+
+    res.json({
+      success: true,
+    });
   } catch (err) {
     console.error(err);
 
@@ -335,7 +361,6 @@ app.get("/api/users/:id/status", async (req, res) => {
       success: true,
       statuses,
     });
-
   } catch (err) {
     console.error(err);
 
@@ -406,11 +431,7 @@ const workerStatusSchema = new mongoose.Schema({
   },
 });
 
-const WorkerStatus = mongoose.model(
-  "WorkerStatus",
-  workerStatusSchema,
-);
-
+const WorkerStatus = mongoose.model("WorkerStatus", workerStatusSchema);
 
 // --- МАРШРУТ ДЛЯ СКАНИРОВАНИЯ QR-КОДА С БЛОКИРОВКОЙ ДРУГИХ ОБЪЕКТОВ ---
 app.post("/api/attendance/scan", async (req, res) => {
@@ -627,6 +648,9 @@ app.get("/api/attendance/download-excel", async (req, res) => {
         dateString: { $gte: startDateStr, $lt: endDateStr },
       });
 
+      // Завантажуємо всі статуси працівників
+      const workerStatuses = await WorkerStatus.find();
+
       // Загружаем объект вместе с его локациями
       const object = await ConstructionObject.findOne({
         name: objectName,
@@ -749,9 +773,24 @@ app.get("/api/attendance/download-excel", async (req, res) => {
 
             const dayCell = row.getCell(colIndex);
 
+            // Ищем статус работника на текущую дату
+            const status = workerStatuses.find((s) => {
+              if (!s.userId) return false;
+
+              if (s.userId.toString() !== user._id.toString()) return false;
+
+              return currentDayStr >= s.startDate && currentDayStr <= s.endDate;
+            });
+
             if (hasScan) {
               dayCell.value = 8;
               workedDaysCount++;
+            } else if (status) {
+              if (status.type === "weekend") {
+                dayCell.value = "В";
+              } else if (status.type === "sick") {
+                dayCell.value = "ХВ";
+              }
             } else {
               dayCell.value = "";
             }

@@ -394,6 +394,64 @@
             />
           </div>
 
+          <hr />
+
+          <h4>Статус відсутності</h4>
+
+          <label>Тип</label>
+
+          <select
+            id="statusType"
+            style="width: 100%; padding: 10px; margin-top: 6px"
+          >
+            <option value="weekend">Вихідний</option>
+            <option value="sick">Хворий</option>
+          </select>
+
+          <label style="margin-top: 10px; display: block"> Дата з </label>
+
+          <input
+            type="date"
+            id="statusStart"
+            style="width: 100%; padding: 10px"
+          />
+
+          <label style="margin-top: 10px; display: block"> Дата по </label>
+
+          <input
+            type="date"
+            id="statusEnd"
+            style="width: 100%; padding: 10px"
+          />
+
+          <button
+            id="addStatusBtn"
+            style="
+              margin-top: 15px;
+              width: 100%;
+              padding: 10px;
+              background: #17a2b8;
+              color: white;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+            "
+          >
+            ➕ Додати статус
+          </button>
+
+          <div
+            id="statusList"
+            style="
+              margin-top: 15px;
+              max-height: 180px;
+              overflow: auto;
+              border: 1px solid #ddd;
+              padding: 10px;
+              border-radius: 5px;
+            "
+          ></div>
+
           <button
             id="saveLocationBtn"
             style="
@@ -788,14 +846,14 @@
         });
 
         document.getElementById("deleteWorkerBtn").onclick = async () => {
-            if (!confirm(`Ви впевнені, що хочете звільнити "${user.name}"?`)) {
-              return;
-            }
+          if (!confirm(`Ви впевнені, що хочете звільнити "${user.name}"?`)) {
+            return;
+          }
 
-            await deleteUser(user._id);
+          await deleteUser(user._id);
 
-            document.getElementById("workerModal").style.display = "none";
-          };
+          document.getElementById("workerModal").style.display = "none";
+        };
 
         document.getElementById("saveLocationBtn").onclick = async () => {
           if (!user.objectName) {
@@ -825,8 +883,6 @@
             },
           );
 
-          
-
           const result = await response.json();
 
           if (result.success) {
@@ -840,6 +896,128 @@
             alert(result.message);
           }
         };
+        // ================================
+        // Загрузка статусов працівника
+        // ================================
+
+        async function loadStatuses() {
+          const response = await fetch(
+            `https://structum.onrender.com/api/users/${user._id}/status`,
+          );
+
+          const result = await response.json();
+
+          const statusList = document.getElementById("statusList");
+
+          statusList.innerHTML = "";
+
+          if (result.statuses.length === 0) {
+            statusList.innerHTML =
+              "<div style='color:#888'>Немає статусів</div>";
+
+            return;
+          }
+
+          result.statuses.forEach((status) => {
+            const div = document.createElement("div");
+
+            div.style.display = "flex";
+            div.style.justifyContent = "space-between";
+            div.style.padding = "6px 0";
+
+            const type = status.type === "weekend" ? "В" : "ХВ";
+
+            div.innerHTML = `
+            <span>
+                <strong>${type}</strong>
+                ${status.startDate}
+                —
+                ${status.endDate}
+            </span>
+
+            <button
+                class="deleteStatusBtn"
+                data-id="${status._id}"
+            >
+                ❌
+            </button>
+        `;
+
+            statusList.appendChild(div);
+          });
+          document.querySelectorAll(".deleteStatusBtn").forEach((btn) => {
+            btn.onclick = async () => {
+              if (!confirm("Видалити цей статус?")) {
+                return;
+              }
+
+              const response = await fetch(
+                `https://structum.onrender.com/api/status/${btn.dataset.id}`,
+
+                {
+                  method: "DELETE",
+                },
+              );
+
+              const result = await response.json();
+
+              if (result.success) {
+                loadStatuses();
+              } else {
+                alert(result.message);
+              }
+            };
+          });
+        }
+
+        // ================================
+        // Добавление статуса
+        // ================================
+
+        document.getElementById("addStatusBtn").onclick = async () => {
+          const type = document.getElementById("statusType").value;
+
+          const startDate = document.getElementById("statusStart").value;
+
+          const endDate = document.getElementById("statusEnd").value;
+
+          if (!startDate || !endDate) {
+            alert("Вкажіть період.");
+
+            return;
+          }
+
+          const response = await fetch(
+            `https://structum.onrender.com/api/users/${user._id}/status`,
+
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type": "application/json",
+              },
+
+              body: JSON.stringify({
+                type,
+
+                startDate,
+
+                endDate,
+              }),
+            },
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            loadStatuses();
+          } else {
+            alert(result.message);
+          }
+        };
+
+        loadStatuses();
+
         document.getElementById("workerModal").style.display = "flex";
       }
 
