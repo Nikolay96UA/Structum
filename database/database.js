@@ -36,6 +36,7 @@ const userSchema = new mongoose.Schema({
   name: String,
   job: String,
   tariff: { type: Number, default: 0 },
+  notes: { type: String, default: "" }, // Примечания (Примітки)
   phone: { type: String, default: "" }, // 🌟 Новое поле: Телефон
   email: { type: String, default: "" }, // 🌟 Новое поле: Email
   debtHours: {
@@ -1042,7 +1043,12 @@ app.get("/api/attendance/download-excel", async (req, res) => {
           // ======================================================
 
           row.getCell(colSuma).value = {
-            formula: `=${borg}${rowIndex}+${dniv}${rowIndex}*${tarif1}${rowIndex}+${dniv2}${rowIndex}*${tarif2}${rowIndex}+${dodano}${rowIndex}-${utrimano}${rowIndex}`,
+            formula:
+              `=${borgLetter}${currentRow}` +
+              `+${dnivLetter}${currentRow}*${tarif1Letter}${currentRow}` +
+              `+${dniv2Letter}${currentRow}*${tarif2Letter}${currentRow}` +
+              `+${addedLetter}${currentRow}` +
+              `-${deductedLetter}${currentRow}`,
           };
 
           // ======================================================
