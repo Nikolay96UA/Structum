@@ -1035,7 +1035,7 @@ app.get("/api/attendance/download-excel", async (req, res) => {
           // ======================================================
 
           row.getCell(colDniv).value = {
-            formula: `=SUM(D${currentRow}:${lastDayLetter}${currentRow})/8`,
+            formula: `=SUM(D${currentRow}:${borgLetter}${currentRow})/8`,
           };
 
           // ======================================================
