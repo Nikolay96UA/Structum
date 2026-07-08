@@ -36,12 +36,38 @@ const userSchema = new mongoose.Schema({
   name: String,
   job: String,
   tariff: { type: Number, default: 0 },
-  debt: { type: Number, default: 0 }, // Долг работников (Борг)
-  bonuses: { type: Number, default: 0 }, // Премии (Додано)
-  penalties: { type: Number, default: 0 }, // Штрафы (Утримано)
   notes: { type: String, default: "" }, // Примечания (Примітки)
   phone: { type: String, default: "" }, // 🌟 Новое поле: Телефон
   email: { type: String, default: "" }, // 🌟 Новое поле: Email
+  debtHours: {
+    type: Number,
+    default: 0,
+  },
+
+  workDays2: {
+    type: Number,
+    default: 0,
+  },
+
+  tariff2: {
+    type: Number,
+    default: 0,
+  },
+
+  addedMoney: {
+    type: Number,
+    default: 0,
+  },
+
+  deductedMoney: {
+    type: Number,
+    default: 0,
+  },
+
+  notes: {
+    type: String,
+    default: "",
+  },
   objectName: {
     type: String,
     default: "",
