@@ -590,31 +590,31 @@ app.get("/api/attendance/download-excel", async (req, res) => {
     const yellowFill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FFF2CC" },
+      fgColor: { argb: "FFFF00" },
     };
 
     const blueFill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "DDEBF7" },
+      fgColor: { argb: "0000FF" },
     };
 
     const greenFill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "E2EFDA" },
+      fgColor: { argb: "008000" },
     };
 
     const redFill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FCE4D6" },
+      fgColor: { argb: "FF0000" },
     };
 
     const grayFill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "E7E6E6" },
+      fgColor: { argb: "808080" },
     };
 
     const dayFill = {
