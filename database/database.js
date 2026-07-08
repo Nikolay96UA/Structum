@@ -267,36 +267,71 @@ app.delete("/api/users/:id", async (req, res) => {
 // ==========================================
 app.put("/api/users/:id/location", async (req, res) => {
   try {
-    const { objectName, location, tariff } = req.body;
+    const {
+      objectName,
+      location,
+      tariff,
+
+      debtHours,
+      workDays2,
+      tariff2,
+      addedMoney,
+      deductedMoney,
+      notes,
+    } = req.body;
 
     const user = await User.findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({
         success: false,
-
         message: "Працівника не знайдено",
       });
     }
 
     user.objectName = objectName;
     user.location = location;
+
     if (tariff !== undefined) {
       user.tariff = tariff;
+    }
+
+    if (debtHours !== undefined) {
+      user.debtHours = debtHours;
+    }
+
+    if (workDays2 !== undefined) {
+      user.workDays2 = workDays2;
+    }
+
+    if (tariff2 !== undefined) {
+      user.tariff2 = tariff2;
+    }
+
+    if (addedMoney !== undefined) {
+      user.addedMoney = addedMoney;
+    }
+
+    if (deductedMoney !== undefined) {
+      user.deductedMoney = deductedMoney;
+    }
+
+    if (notes !== undefined) {
+      user.notes = notes;
     }
 
     await user.save();
 
     res.json({
       success: true,
-
-      message: "Локацію змінено",
+      message: "Дані працівника успішно оновлено",
     });
   } catch (err) {
     console.error(err);
 
     res.status(500).json({
       success: false,
+      message: "Помилка сервера",
     });
   }
 });

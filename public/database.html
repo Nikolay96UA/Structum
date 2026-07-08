@@ -615,6 +615,20 @@
         document.getElementById("modalLocation").textContent =
           user.lastLocation || "Немає відміток";
         document.getElementById("workerTariff").value = user.tariff || 0;
+        document.getElementById("workerDebtHours").value = user.debtHours || 0;
+
+        document.getElementById("workerDays2").value = user.workDays2 || 0;
+
+        document.getElementById("workerTariff2").value = user.tariff2 || 0;
+
+        document.getElementById("workerAddedMoney").value =
+          user.addedMoney || 0;
+
+        document.getElementById("workerDeductedMoney").value =
+          user.deductedMoney || 0;
+
+        document.getElementById("workerNotes").value = user.notes || "";
+
         document.getElementById("modalPhone").textContent =
           user.phone || "Немає даних";
         document.getElementById("modalEmail").textContent =
@@ -810,6 +824,27 @@
           }
 
           const tariff = Number(document.getElementById("workerTariff").value);
+          const debtHours = Number(
+            document.getElementById("workerDebtHours").value,
+          );
+
+          const workDays2 = Number(
+            document.getElementById("workerDays2").value,
+          );
+
+          const tariff2 = Number(
+            document.getElementById("workerTariff2").value,
+          );
+
+          const addedMoney = Number(
+            document.getElementById("workerAddedMoney").value,
+          );
+
+          const deductedMoney = Number(
+            document.getElementById("workerDeductedMoney").value,
+          );
+
+          const notes = document.getElementById("workerNotes").value;
 
           const location = locationSelect.value;
 
@@ -822,23 +857,42 @@
               headers: {
                 "Content-Type": "application/json",
               },
-
               body: JSON.stringify({
                 objectName: objectSelect.value,
                 location: locationSelect.value,
+
                 tariff,
+
+                debtHours,
+
+                workDays2,
+
+                tariff2,
+
+                addedMoney,
+
+                deductedMoney,
+
+                notes,
               }),
             },
           );
 
           const result = await response.json();
-
           if (result.success) {
-            user.location = location;
             user.objectName = objectSelect.value;
+            user.location = location;
             user.tariff = tariff;
 
+            user.debtHours = debtHours;
+            user.workDays2 = workDays2;
+            user.tariff2 = tariff2;
+            user.addedMoney = addedMoney;
+            user.deductedMoney = deductedMoney;
+            user.notes = notes;
+
             alert("Дані успішно збережено");
+
             loadUsers();
           } else {
             alert(result.message);
