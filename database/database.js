@@ -557,7 +557,6 @@ app.get("/api/attendance/download-excel", async (req, res) => {
       monthCell.alignment = { horizontal: "center", vertical: "middle" };
 
       sheet.mergeCells(`A2:${sheet.getCell(2, 3 + daysInMonth).address}`);
-      sheet.getCell("A2").value = "Загальнобудівельні роботи";
       sheet.getCell("A2").font = {
         name: "Times New Roman",
         size: 10,
