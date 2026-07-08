@@ -1,43 +1,179 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>STRUCTUM</title>
-</head>
-<body>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        background: #f4f6f9;
+        min-height: 100vh;
+      }
+
+      /* ================= HEADER ================= */
+
+      header {
+        background: #1f3b57;
+        color: white;
+        padding: 18px 40px;
+
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+      }
+
+      header a {
+        text-decoration: none;
+        color: white;
+      }
+
+      header a p:first-child {
+        font-size: 32px;
+        font-weight: bold;
+        letter-spacing: 2px;
+      }
+
+      header a p:last-child {
+        font-size: 15px;
+        color: #d9d9d9;
+      }
+
+      /* ================= LOGOUT ================= */
+
+      #logoutBtn {
+        padding: 10px 20px !important;
+        border-radius: 8px !important;
+        font-size: 15px;
+        transition: 0.25s;
+      }
+
+      #logoutBtn:hover {
+        background: #b92b37 !important;
+        transform: translateY(-2px);
+      }
+
+      /* ================= MENU ================= */
+
+      ul {
+        list-style: none;
+
+        width: 700px;
+        max-width: 95%;
+
+        margin: 60px auto;
+
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+      }
+
+      ul li a {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        height: 90px;
+
+        text-decoration: none;
+
+        font-size: 22px;
+        font-weight: bold;
+
+        color: white;
+
+        background: #2e7d32;
+
+        border-radius: 12px;
+
+        transition: 0.25s;
+
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+      }
+
+      ul li a:hover {
+        background: #388e3c;
+
+        transform: translateY(-5px);
+
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      /* ================= MOBILE ================= */
+
+      @media (max-width: 700px) {
+        ul {
+          grid-template-columns: 1fr;
+        }
+
+        header {
+          flex-direction: column;
+          gap: 20px;
+          text-align: center;
+        }
+
+        header a p:first-child {
+          font-size: 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
     <header>
-        <a href="./index.html"><p>STRUCTUM</p><p>облік персоналу</p></a>
-        <button id="logoutBtn" style="padding: 8px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+      <a href="./index.html"
+        ><p>STRUCTUM</p>
+        <p>облік персоналу</p></a
+      >
+      <button
+        id="logoutBtn"
+        style="
+          padding: 8px 15px;
+          background-color: #dc3545;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          font-weight: bold;
+          cursor: pointer;
+          transition: background 0.2s;
+        "
+      >
         Вийти з акаунту
-    </button>
+      </button>
     </header>
 
-        <ul>
-            <li><a href="./admin.html">Адміністратор</a></li>
-            <li><a href="./register.html">Реєстрація</a></li>
-            <li><a href="./login.html">Логін</a></li>
-            <li><a href="./tagging.html">ТАБЕЛЮВАННЯ</a></li>
-            <li><a href="./database.html">БАЗА ДАННИХ</a></li>
-            <li><a href="./businessTrip.html">ФОРМА ВІДРЯДЖЕНЬ</a></li>
-        </ul>
+    <ul>
+      <li><a href="./admin.html">Адміністратор</a></li>
+      <li><a href="./register.html">Реєстрація</a></li>
+      <li><a href="./login.html">Логін</a></li>
+      <li><a href="./tagging.html">ТАБЕЛЮВАННЯ</a></li>
+      <li><a href="./database.html">БАЗА ДАННИХ</a></li>
+      <li><a href="./businessTrip.html">ФОРМА ВІДРЯДЖЕНЬ</a></li>
+    </ul>
 
-        <script>    // 🌟 ЛОГИКА ВЫХОДА ИЗ СИСТЕМЫ
-    document.getElementById('logoutBtn').addEventListener('click', () => {
+    <script>
+      // 🌟 ЛОГИКА ВЫХОДА ИЗ СИСТЕМЫ
+      document.getElementById("logoutBtn").addEventListener("click", () => {
         // Полностью очищаем данные сессии текущего бригадира
-        localStorage.removeItem('objectName');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userLogin');
+        localStorage.removeItem("objectName");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("userLogin");
 
         // Перенаправляем на страницу авторизации
-        window.location.href = 'login.html';
-    });
+        window.location.href = "login.html";
+      });
 
-    // 🌟 ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА: Если неавторизованный пользователь зашел на index.html в обход логина
-    if (!localStorage.getItem('objectName')) {
-        window.location.href = 'login.html';
-    }
-</script>
-
-</body>
+      // 🌟 ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА: Если неавторизованный пользователь зашел на index.html в обход логина
+      if (!localStorage.getItem("objectName")) {
+        window.location.href = "login.html";
+      }
+    </script>
+  </body>
 </html>
