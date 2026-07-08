@@ -956,6 +956,44 @@ ${monthName} ${year}`;
 
           row.getCell(colPrim).value = user.notes || "";
 
+          // Последняя колонка с днями месяца
+          const lastDayLetter = sheet
+            .getCell(rowIndex, 3 + daysInMonth)
+            .address.replace(/[0-9]/g, "");
+
+          // Буквы финансовых колонок
+          const borg = sheet
+            .getCell(rowIndex, colBorg)
+            .address.replace(/[0-9]/g, "");
+          const dniv = sheet
+            .getCell(rowIndex, colDniv)
+            .address.replace(/[0-9]/g, "");
+          const dniv2 = sheet
+            .getCell(rowIndex, colDniv2)
+            .address.replace(/[0-9]/g, "");
+          const tarif1 = sheet
+            .getCell(rowIndex, colTarif1)
+            .address.replace(/[0-9]/g, "");
+          const tarif2 = sheet
+            .getCell(rowIndex, colTarif2)
+            .address.replace(/[0-9]/g, "");
+          const dodano = sheet
+            .getCell(rowIndex, colDodano)
+            .address.replace(/[0-9]/g, "");
+          const utrimano = sheet
+            .getCell(rowIndex, colUtrimano)
+            .address.replace(/[0-9]/g, "");
+
+          // Формула "Днів"
+          row.getCell(colDniv).value = {
+            formula: `=SUM(D${rowIndex}:${lastDayLetter}${rowIndex})/8`,
+          };
+
+          // Формула "Сума"
+          row.getCell(colSuma).value = {
+            formula: `=${borg}${rowIndex}+${dniv}${rowIndex}*${tarif1}${rowIndex}+${dniv2}${rowIndex}*${tarif2}${rowIndex}+${dodano}${rowIndex}-${utrimano}${rowIndex}`,
+          };
+
           const dnivLetter = sheet
             .getCell(rowIndex, colDniv)
             .address.replace(/[0-9]/g, "");
