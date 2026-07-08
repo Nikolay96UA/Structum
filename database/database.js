@@ -297,23 +297,23 @@ app.put("/api/users/:id/location", async (req, res) => {
     }
 
     if (debtHours !== undefined) {
-      user.debtHours = debtHours;
+      user.debtHours = Number(debtHours);
     }
 
     if (workDays2 !== undefined) {
-      user.workDays2 = workDays2;
+      user.workDays2 = Number(workDays2);
     }
 
     if (tariff2 !== undefined) {
-      user.tariff2 = tariff2;
+      user.tariff2 = Number(tariff2);
     }
 
     if (addedMoney !== undefined) {
-      user.addedMoney = addedMoney;
+      user.addedMoney = Number(addedMoney);
     }
 
     if (deductedMoney !== undefined) {
-      user.deductedMoney = deductedMoney;
+      user.deductedMoney = Number(deductedMoney);
     }
 
     if (notes !== undefined) {
@@ -586,15 +586,30 @@ app.get("/api/attendance/download-excel", async (req, res) => {
         sheet.getColumn(3 + d).width = 3.2;
       }
       const startFinanceCol = 4 + daysInMonth;
-      sheet.getColumn(startFinanceCol).width = 7;
-      sheet.getColumn(startFinanceCol + 1).width = 6;
-      sheet.getColumn(startFinanceCol + 2).width = 6;
-      sheet.getColumn(startFinanceCol + 3).width = 8;
-      sheet.getColumn(startFinanceCol + 4).width = 8;
-      sheet.getColumn(startFinanceCol + 5).width = 8;
-      sheet.getColumn(startFinanceCol + 6).width = 8;
-      sheet.getColumn(startFinanceCol + 7).width = 9;
-      sheet.getColumn(startFinanceCol + 8).width = 15;
+
+      // Финансовые колонки
+
+      const colBorg = startFinanceCol;
+      const colDniv = colBorg + 1;
+      const colDniv2 = colBorg + 2;
+      const colTarif1 = colBorg + 3;
+      const colTarif2 = colBorg + 4;
+      const colDodano = colBorg + 5;
+      const colUtrimano = colBorg + 6;
+      const colSuma = colBorg + 7;
+      const colPrim = colBorg + 8;
+
+      // Ширина колонок
+
+      sheet.getColumn(colBorg).width = 10;
+      sheet.getColumn(colDniv).width = 8;
+      sheet.getColumn(colDniv2).width = 8;
+      sheet.getColumn(colTarif1).width = 10;
+      sheet.getColumn(colTarif2).width = 10;
+      sheet.getColumn(colDodano).width = 10;
+      sheet.getColumn(colUtrimano).width = 10;
+      sheet.getColumn(colSuma).width = 14;
+      sheet.getColumn(colPrim).width = 28;
 
       const thinBorder = {
         top: { style: "thin", color: { argb: "BFBFBF" } },
@@ -604,37 +619,96 @@ app.get("/api/attendance/download-excel", async (req, res) => {
       };
 
       // Шапка таблицы
-      sheet.mergeCells(`D1:${sheet.getCell(1, 3 + daysInMonth).address}`);
+
+      // =====================================================
+      //                ШАПКА ТАБЕЛЯ
+      // =====================================================
+
+      // A1:C3
+      sheet.mergeCells("A1:A3");
+      sheet.mergeCells("B1:B3");
+      sheet.mergeCells("C1:C3");
+
+      sheet.getCell("A1").value = "№";
+      sheet.getCell("B1").value = "ПІБ";
+      sheet.getCell("C1").value = "Посада";
+
+      // D1 - дни месяца
+      sheet.mergeCells(1, 4, 1, 3 + daysInMonth);
+
       const monthCell = sheet.getCell("D1");
-      monthCell.value = `Табель: ${objectName} 
-Локація: ${location} 
-Місяць ${month}.${year} `;
+
+      const monthName = [
+        "",
+        "Січень",
+        "Лютий",
+        "Березень",
+        "Квітень",
+        "Травень",
+        "Червень",
+        "Липень",
+        "Серпень",
+        "Вересень",
+        "Жовтень",
+        "Листопад",
+        "Грудень",
+      ][month];
+
+      monthCell.value = `Табель обліку робочого часу
+
+${objectName}
+
+${location}
+
+${monthName} ${year}`;
+
       monthCell.font = {
         name: "Times New Roman",
-        size: 10,
+        size: 11,
         bold: true,
-        color: { argb: "FF0000" },
       };
-      monthCell.alignment = { horizontal: "center", vertical: "middle" };
 
-      sheet.mergeCells(`A2:${sheet.getCell(2, 3 + daysInMonth).address}`);
-      sheet.getCell("A2").font = {
+      monthCell.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+        wrapText: true,
+      };
+
+      // Вторая строка
+      sheet.mergeCells(2, 4, 2, 3 + daysInMonth);
+
+      sheet.getCell("D2").value = "Дні місяця";
+
+      sheet.getCell("D2").font = {
         name: "Times New Roman",
         size: 10,
         bold: true,
       };
-      sheet.getCell("A2").alignment = {
+
+      sheet.getCell("D2").alignment = {
         horizontal: "center",
         vertical: "middle",
       };
-      for (let col = 1; col <= startFinanceCol + 8; col++) {
-        sheet.getCell(2, col).fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "E2EFDA" },
+
+      // оформление A1:C3
+
+      ["A1", "B1", "C1"].forEach((addr) => {
+        const cell = sheet.getCell(addr);
+
+        cell.font = {
+          name: "Times New Roman",
+          size: 10,
+          bold: true,
         };
-        sheet.getCell(2, col).border = thinBorder;
-      }
+
+        cell.alignment = {
+          horizontal: "center",
+          vertical: "middle",
+          wrapText: true,
+        };
+
+        cell.border = thinBorder;
+      });
 
       const row3 = sheet.getRow(3);
       row3.height = 20;
@@ -642,15 +716,18 @@ app.get("/api/attendance/download-excel", async (req, res) => {
         "№",
         "ПІБ",
         "Посада",
+
         ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+
+        "Борг",
         "Днів",
         "Днів 2",
-        "Тариф1",
+        "Тариф 1",
         "Тариф 2",
         "Додано",
         "Утримано",
         "Сума",
-        "Примітки",
+        "Примітка",
       ];
 
       for (let col = 1; col <= startFinanceCol + 8; col++) {
@@ -710,13 +787,6 @@ app.get("/api/attendance/download-excel", async (req, res) => {
 
       // Завантажуємо всі статуси працівників
       const workerStatuses = await WorkerStatus.find();
-
-      // Загружаем объект вместе с его локациями
-      const object = await ConstructionObject.findOne({
-        name: objectName,
-      });
-
-      const locations = object?.locations || [];
 
       // Вытаскиваем уникальные ID сотрудников, которые отметились на этом объекте хоть раз
       const uniqueUserIds = [
@@ -868,23 +938,23 @@ app.get("/api/attendance/download-excel", async (req, res) => {
             dayCell.border = thinBorder;
           }
 
-          const colBorg = 4 + daysInMonth;
-          const colDniv = colBorg + 1;
-          const colDniv2 = colBorg + 2;
-          const colTarif1 = colBorg + 3;
-          const colTarif2 = colBorg + 4;
-          const colDodano = colBorg + 5;
-          const colUtrimano = colBorg + 6;
-          const colSuma = colBorg + 7;
-          const colPrim = colBorg + 8;
+          row.getCell(colBorg).value = user.debtHours || 0;
 
-          row.getCell(colBorg).value = user.debt || null;
+          // пока просто записываем фактическое количество рабочих дней.
+          // Позже заменим на формулу Excel.
           row.getCell(colDniv).value = workedDaysCount;
-          row.getCell(colDniv2).value = null;
+
+          row.getCell(colDniv2).value = user.workDays2 || 0;
+
           row.getCell(colTarif1).value = user.tariff || 0;
-          row.getCell(colTarif2).value = null;
-          row.getCell(colDodano).value = user.bonuses || null;
-          row.getCell(colUtrimano).value = user.penalties || null;
+
+          row.getCell(colTarif2).value = user.tariff2 || 0;
+
+          row.getCell(colDodano).value = user.addedMoney || 0;
+
+          row.getCell(colUtrimano).value = user.deductedMoney || 0;
+
+          row.getCell(colPrim).value = user.notes || "";
 
           const dnivLetter = sheet
             .getCell(rowIndex, colDniv)
