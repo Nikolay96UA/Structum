@@ -78,104 +78,92 @@
 
       <button id="logoutBtn" class="logout-btn">Вийти з акаунту</button>
     </header>
+    <div style="display: flex">
+      <h2 style="margin-top: 40px; padding-bottom: 20px">
+        Додати користувача до бази даних
+      </h2>
+      <form id="userForm">
+        <input
+          type="text"
+          id="userName"
+          placeholder="ПІБ працівника"
+          coding="utf-8"
+          required
+        /><br />
 
-    <h2 style="margin-top: 40px;">Додати користувача до бази даних</h2>
-    <form id="userForm">
-      <input
-        type="text"
-        id="userName"
-        placeholder="ПІБ працівника"
-        coding="utf-8"
-        required
-      /><br />
-
-      <!-- 🌟 ВЫПАДАЮЩИЙ СПИСОК ДОЛЖНОСТЕЙ ВМЕСТО СТАРГО INPUT -->
-      <div class="form-group">
-        <label for="userJob">Посада працівника</label>
-        <select id="userJob" required>
-          <option value="" disabled selected>Оберіть посаду зі списку</option>
-
-          <!-- 🌟 ГРУППА: ОСНОВНОЙ ПЕРСОНАЛ -->
-          <optgroup label="Основний персонал">
-            <option value="монтажник">Монтажник</option>
-            <option value="зварник">Зварник</option>
-            <option value="електромонтер">Електромонтер</option>
-            <option value="бригадир">Бригадир</option>
-            <option value="стропальник">Стропальник</option>
-            <option value="арматурник">Арматурник</option>
-            <option value="підсобник">Підсобник</option>
-          </optgroup>
-
-          <!-- 🌟 ГРУППА: ІТР -->
-          <optgroup label="ІТР">
-            <option value="інженер">Інженер</option>
-            <option value="комірник">Комірник</option>
-            <!-- Заменили кладовий на комірник, как было в твоей базе -->
-            <option value="механік">Механік</option>
-            <option value="геодезист">Геодезист</option>
-            <option value="Начальник бази">Начальник бази</option>
-            <option value="начальник дільниці">Начальник дільниці</option>
-            <option value="виконроб">Виконроб</option>
-            <option value="Завідувач господарства">
-              Завідувач господарства
-            </option>
-            <option value="інженер ОП">Інженер ОП</option>
-          </optgroup>
-
-          <!-- 🌟 ГРУППА: ТРАНСПОРТНИЙ ВІДДІЛ -->
-          <optgroup label="Транспортний відділ">
-            <option value="водій">Водій</option>
-            <option value="машиніст автокрана">Машиніст автокрана</option>
-          </optgroup>
-        </select>
-
+        <!-- 🌟 ВЫПАДАЮЩИЙ СПИСОК ДОЛЖНОСТЕЙ ВМЕСТО СТАРГО INPUT -->
         <div class="form-group">
-          <label>Будівельний об'єкт</label>
+          <label for="userJob">Посада працівника</label>
+          <select id="userJob" required>
+            <option value="" disabled selected>Оберіть посаду зі списку</option>
 
-          <select
-            id="objectName"
-            style="
-              width: 100%;
-              padding: 10px;
-              border: 1px solid #ccc;
-              border-radius: 4px;
-            "
-          >
-            <option value="">Завантаження...</option>
+            <!-- 🌟 ГРУППА: ОСНОВНОЙ ПЕРСОНАЛ -->
+            <optgroup label="Основний персонал">
+              <option value="монтажник">Монтажник</option>
+              <option value="зварник">Зварник</option>
+              <option value="електромонтер">Електромонтер</option>
+              <option value="бригадир">Бригадир</option>
+              <option value="стропальник">Стропальник</option>
+              <option value="арматурник">Арматурник</option>
+              <option value="підсобник">Підсобник</option>
+            </optgroup>
+
+            <!-- 🌟 ГРУППА: ІТР -->
+            <optgroup label="ІТР">
+              <option value="інженер">Інженер</option>
+              <option value="комірник">Комірник</option>
+              <!-- Заменили кладовий на комірник, как было в твоей базе -->
+              <option value="механік">Механік</option>
+              <option value="геодезист">Геодезист</option>
+              <option value="Начальник бази">Начальник бази</option>
+              <option value="начальник дільниці">Начальник дільниці</option>
+              <option value="виконроб">Виконроб</option>
+              <option value="Завідувач господарства">
+                Завідувач господарства
+              </option>
+              <option value="інженер ОП">Інженер ОП</option>
+            </optgroup>
+
+            <!-- 🌟 ГРУППА: ТРАНСПОРТНИЙ ВІДДІЛ -->
+            <optgroup label="Транспортний відділ">
+              <option value="водій">Водій</option>
+              <option value="машиніст автокрана">Машиніст автокрана</option>
+            </optgroup>
           </select>
+
+          <div class="form-group">
+            <label>Будівельний об'єкт</label>
+
+            <select
+              id="objectName"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+              "
+            >
+              <option value="">Завантаження...</option>
+            </select>
+          </div>
+
+          <input
+            type="tel"
+            id="userPhone"
+            placeholder="📞 Номер телефону (наприклад: +380...)"
+            required
+          />
+          <input
+            type="email"
+            id="userEmail"
+            placeholder="✉️ Електронна пошта"
+            required
+          />
         </div>
 
-        <input
-          type="tel"
-          id="userPhone"
-          placeholder="📞 Номер телефону (наприклад: +380...)"
-          required
-        />
-        <input
-          type="email"
-          id="userEmail"
-          placeholder="✉️ Електронна пошта"
-          required
-        />
-      </div>
+        <button type="submit">Сохранить в базу</button>
 
-      <button type="submit">Сохранить в базу</button>
-
-      <!-- 🌟 БЛОК ДЛЯ ФИЛЬТРАЦИИ И ПОИСКА -->
-      <div
-        style="
-          background: white;
-          padding: 20px;
-          border-radius: 6px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-          max-width: 600px;
-          margin-bottom: 20px;
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-        "
-      >
-        <!-- 🌟 СИНХРОНИЗИРОВАННЫЙ БЛОК ФИЛЬТРАЦИИ И ПОИСКА -->
+        <!-- 🌟 БЛОК ДЛЯ ФИЛЬТРАЦИИ И ПОИСКА -->
         <div
           style="
             background: white;
@@ -189,67 +177,82 @@
             flex-wrap: wrap;
           "
         >
-          <!-- Поиск по ФИО остается текстовым -->
-          <input
-            type="text"
-            id="searchName"
-            placeholder="🔍 Пошук за ім'ям..."
-            style="flex: 1; min-width: 180px; margin: 0; padding: 8px"
-          />
-
-          <!-- Фильтр по должности -->
-          <select
-            id="searchJob"
+          <!-- 🌟 СИНХРОНИЗИРОВАННЫЙ БЛОК ФИЛЬТРАЦИИ И ПОИСКА -->
+          <div
             style="
-              flex: 1;
-              min-width: 150px;
-              margin: 0;
-              padding: 8px;
-              height: 38px;
+              background: white;
+              padding: 20px;
+              border-radius: 6px;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+              max-width: 600px;
+              margin-bottom: 20px;
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
             "
           >
-            <option value="">🛠️ Всі посади</option>
-            <option value="монтажник">Монтажник</option>
-            <option value="зварник">Зварник</option>
-            <option value="електромонтер">Електромонтер</option>
-            <option value="бригадир">Бригадир</option>
-            <option value="стропальник">Стропальник</option>
-            <option value="арматурник">Арматурник</option>
-            <option value="підсобник">Підсобник</option>
-            <option value="інженер">Інженер</option>
-            <option value="комірник">Комірник</option>
-            <option value="механік">Механік</option>
-            <option value="геодезист">Геодезист</option>
-            <option value="начальник бази">Начальник бази</option>
-            <option value="начальник дільниці">Начальник дільниці</option>
-            <option value="виконроб">Виконроб</option>
-            <option value="завідувач господарства">
-              Завідувач господарства
-            </option>
-            <option value="інженер ОП">Інженер ОП</option>
-            <option value="водій">Водій</option>
-            <option value="машиніст автокрана">Машиніст автокрана</option>
-          </select>
+            <!-- Поиск по ФИО остается текстовым -->
+            <input
+              type="text"
+              id="searchName"
+              placeholder="🔍 Пошук за ім'ям..."
+              style="flex: 1; min-width: 180px; margin: 0; padding: 8px"
+            />
 
-          <!-- Фильтр по объектам (заполняется динамически) -->
-          <select
-            id="searchObject"
-            style="
-              flex: 1;
-              min-width: 150px;
-              margin: 0;
-              padding: 8px;
-              height: 38px;
-            "
-          >
-            <option value="">🏗️ Всі об'єкти</option>
-          </select>
+            <!-- Фильтр по должности -->
+            <select
+              id="searchJob"
+              style="
+                flex: 1;
+                min-width: 150px;
+                margin: 0;
+                padding: 8px;
+                height: 38px;
+              "
+            >
+              <option value="">🛠️ Всі посади</option>
+              <option value="монтажник">Монтажник</option>
+              <option value="зварник">Зварник</option>
+              <option value="електромонтер">Електромонтер</option>
+              <option value="бригадир">Бригадир</option>
+              <option value="стропальник">Стропальник</option>
+              <option value="арматурник">Арматурник</option>
+              <option value="підсобник">Підсобник</option>
+              <option value="інженер">Інженер</option>
+              <option value="комірник">Комірник</option>
+              <option value="механік">Механік</option>
+              <option value="геодезист">Геодезист</option>
+              <option value="начальник бази">Начальник бази</option>
+              <option value="начальник дільниці">Начальник дільниці</option>
+              <option value="виконроб">Виконроб</option>
+              <option value="завідувач господарства">
+                Завідувач господарства
+              </option>
+              <option value="інженер ОП">Інженер ОП</option>
+              <option value="водій">Водій</option>
+              <option value="машиніст автокрана">Машиніст автокрана</option>
+            </select>
+
+            <!-- Фильтр по объектам (заполняется динамически) -->
+            <select
+              id="searchObject"
+              style="
+                flex: 1;
+                min-width: 150px;
+                margin: 0;
+                padding: 8px;
+                height: 38px;
+              "
+            >
+              <option value="">🏗️ Всі об'єкти</option>
+            </select>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
 
-    <h2>Список користувачів в системі:</h2>
-    <ul id="usersList"></ul>
+      <h2>Список користувачів в системі:</h2>
+      <ul id="usersList"></ul>
+    </div>
 
     <!-- 🌟 МОДАЛЬНОЕ ОКНО КАРТОЧКИ РАБОТНИКА -->
     <div
