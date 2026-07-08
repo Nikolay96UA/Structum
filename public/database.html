@@ -7,48 +7,63 @@
     <script src="https://cloudflare.com"></script>
 
     <style>
-      /* ================= HEADER ================= */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f5f7fa;
+      }
 
       header {
-        background: #1f3b57;
-        color: white;
-        padding: 18px 40px;
-
+        height: 80px;
+        background: linear-gradient(90deg, #1e3c72, #2a5298);
         display: flex;
         justify-content: space-between;
         align-items: center;
-
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+        padding: 0 35px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
       }
 
-      header a {
+      .logo {
         text-decoration: none;
         color: white;
       }
 
-      header a p:first-child {
-        font-size: 32px;
+      .logo p:first-child {
+        font-size: 34px;
         font-weight: bold;
         letter-spacing: 2px;
       }
 
-      header a p:last-child {
-        font-size: 15px;
-        color: #d9d9d9;
+      .logo p:last-child {
+        font-size: 14px;
+        color: #d9e9ff;
+        margin-top: -5px;
       }
 
-      /* ================= LOGOUT ================= */
-
-      #logoutBtn {
-        padding: 10px 20px !important;
-        border-radius: 8px !important;
-        font-size: 15px;
-        transition: 0.25s;
+      .logout-btn {
+        padding: 10px 18px;
+        border: none;
+        border-radius: 6px;
+        background: #dc3545;
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+        cursor: pointer;
+        transition: 0.2s;
       }
 
-      #logoutBtn:hover {
-        background: #b92b37 !important;
+      .logout-btn:hover {
+        background: #bb2d3b;
         transform: translateY(-2px);
+      }
+
+      .logout-btn:active {
+        transform: translateY(0);
       }
     </style>
 
@@ -56,7 +71,12 @@
   </head>
   <body>
     <header>
-      <a href="./index.html">STRUCTUM облік персоналу</a>
+      <a href="./index.html" class="logo">
+        <p>STRUCTUM</p>
+        <p>облік персоналу</p>
+      </a>
+
+      <button id="logoutBtn" class="logout-btn">Вийти з акаунту</button>
     </header>
 
     <h2>Додати користувача до бази даних</h2>
@@ -1223,6 +1243,14 @@
             document.getElementById(button.dataset.tab).classList.add("active");
           };
         });
+      });
+
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.removeItem("objectName");
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("userLogin");
+
+        window.location.href = "login.html";
       });
 
       loadObjectsForFilter();
