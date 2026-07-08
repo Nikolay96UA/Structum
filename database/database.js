@@ -982,7 +982,7 @@ app.get("/api/attendance/download-excel", async (req, res) => {
 
           row.getCell(colBorg).value = user.debtHours || 0;
 
-          row.getCell(colDniv2).value = user.days2 || 0;
+          row.getCell(colDniv2).value = user.workDays2 || 0;
 
           row.getCell(colTarif1).value = user.tariff || 0;
 
